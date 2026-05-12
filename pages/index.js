@@ -433,7 +433,7 @@ export default function Home(){
                 <select style={{background:'rgba(255,255,255,.06)',border:'1px solid rgba(255,255,255,.15)',color:'#fff',padding:'8px 12px',borderRadius:'4px',fontFamily:'DM Sans,sans-serif',fontSize:'13px'}} value={form.adults} onChange={e=>setForm(f=>({...f,adults:e.target.value}))}>
                   {[1,2,3,4,5].map(n=><option key={n} value={n}>{n} Yetişkin</option>)}
                 </select>
-                <button className="go" onClick={go} disabled={loading||!dest}>{loading?'⏳ Yükleniyor...':'🔍 Planı Oluştur'}</button>
+                <button className="go" onClick={go} disabled={loading||!dest}>{loading?"⏳ Yükleniyor...":"🔍 Planı Oluştur"}</button>
               </div>
             </>
           ):(
@@ -516,11 +516,11 @@ export default function Home(){
                     <div className="fa"><div className="fl"/><div className="fdr">{parseDur(o.duration)}</div></div>
                     <div><div className="fcy">{o.arrival.airport}</div><div className="ftm">{fmtTime(o.arrival.time)}</div></div>
                   </div>
-                  <div><div className="fst">{o.stops===0?'✅ Direkt':`${o.stops} aktarma · ${o.stop_airports.join(', ')}`}</div>{o.seats_left<=5&&<div style={{color:'var(--danger)',fontSize:'11px'}}>⚠️ Son {o.seats_left} koltuk!</div>}</div>
+                  <div><div className="fst">{o.stops===0?"✅ Direkt":`${o.stops} aktarma · ${o.stop_airports.join(', ')}`}</div>{o.seats_left<=5&&<div style={{color:'var(--danger)',fontSize:'11px'}}>⚠️ Son {o.seats_left} koltuk!</div>}</div>
                   <div style={{textAlign:'right'}}><div className="fp">{o.price.currency} {parseFloat(o.price.total).toLocaleString('tr-TR')}</div><div style={{fontSize:'10px',color:'var(--smoke)'}}>toplam</div><button className="bkb" style={{marginTop:'8px'}}>Rezerve Et</button></div>
                 </div>
               ))
-            ):<div className="femp">{res.flights?.error?`❌ ${res.flights.error}`:'✈️ Amadeus API key Vercel'e eklenince canlı uçuşlar burada görünecek.'}</div>}
+            ):<div className="femp">{res.flights?.error?`❌ ${res.flights.error}`:"✈️ Amadeus API key Vercel eklenince canlı uçuşlar burada görünecek."}</div>}
           </div>
 
           {/* CURRENCY */}
@@ -532,7 +532,7 @@ export default function Home(){
                 <div className="cg" style={{gridTemplateColumns:'repeat(auto-fit,minmax(160px,1fr))'}}>
                   {Object.entries(res.currency.rates).map(([code,data])=>(
                     <div key={code} className={`cc ${data.isDest?'cc-dest':data.isOrigin?'cc-origin':''}`}>
-                      <div className="cp">{data.isDest?'🏁 Varış Para Birimi':data.isOrigin?'🛫 Kalkış Para Birimi':code==='USD'?'💵 Dolar':'💶 Euro'}</div>
+                      <div className="cp">{data.isDest?"🏁 Varış Para Birimi":data.isOrigin?"🛫 Kalkış Para Birimi":code==='USD'?'💵 Dolar':'💶 Euro'}</div>
                       <div className="cp" style={{fontSize:'12px',marginBottom:'4px',fontFamily:'Space Mono,monospace'}}>EUR / {code}</div>
                       <div className="cr">{data.formatted}</div>
                       <div style={{fontSize:'11px',color:'var(--ok)'}}>↑ Anlık kur</div>
@@ -561,7 +561,7 @@ export default function Home(){
                     {res.visa.notes&&<div className="vnt">💡 {res.visa.notes}</div>}
                     {res.visa.link&&<div style={{marginTop:'8px',fontSize:'12px'}}><a href={res.visa.link} target="_blank" style={{color:'var(--teal)'}}>🔗 Online başvuru →</a></div>}
                   </>
-                ):<div style={{fontSize:'13px',color:'var(--smoke)',padding:'10px',background:'var(--mist)',borderRadius:'6px'}}>{res.visa?.message||'Bu rota için konsolosluğun web sitesini kontrol edin.'}</div>}
+                ):<div style={{fontSize:'13px',color:'var(--smoke)',padding:'10px',background:'var(--mist)',borderRadius:'6px'}}>{res.visa?.message||"Bu rota için konsolosluğun web sitesini kontrol edin."}</div>}
               </div>
               <div className="ic">
                 <h4>💉 Aşı & Sağlık — {res.country?.flag} {res.country?.name}</h4>
@@ -584,7 +584,7 @@ export default function Home(){
                 <div style={{fontSize:'13px',color:'var(--smoke)',lineHeight:'1.7',marginBottom:'4px'}}>
                   <strong>{res.country.voltage} / {res.country.freq}</strong> —
                   {res.country.trCompat?' ✅ Türkiye ile aynı voltaj, çoğu cihaz adaptörsüz çalışabilir.'
-                  :' ⚠️ Türkiye'den farklı voltaj veya priz tipi — üniversal adaptör veya dönüştürücü gerekli.'}
+                  :' ⚠️ Türkiyeden farklı voltaj veya priz tipi — üniversal adaptör veya dönüştürücü gerekli.'}
                 </div>
                 <div className="pg">
                   {res.country.plugs.map(p=>{const info=PLUG_INFO[p];if(!info)return null;return(
@@ -593,7 +593,7 @@ export default function Home(){
                       <div className="pt">{info.name}</div>
                       <div className="pn">{info.desc}</div>
                       <div className="pvt">{res.country.voltage} · {res.country.freq}</div>
-                      <div className={`pcy ${info.trCompat?'py':'pa'}`}>{info.trCompat?'✅ TR Uyumlu':'⚡ Adaptör Gerek'}</div>
+                      <div className={`pcy ${info.trCompat?'py':'pa'}`}>{info.trCompat?"✅ TR Uyumlu":"⚡ Adaptör Gerek"}</div>
                     </div>
                   );})}
                   <div className="pc" style={{background:'rgba(45,134,83,.05)',borderColor:'rgba(45,134,83,.3)'}}>
