@@ -619,11 +619,11 @@ export default function Home(){
             {rental==='car'&&(
               <div className="rg">
                 {[
-                  {icon:'🏷️',platform:'Rentalcars.com',desc:'Dünya geneli en geniş filoya sahip platform. Sigorta seçenekleri, ücretsiz iptal.',badge:'En Çok Kullanılan',color:'var(--teal)',
+                  {icon:'🏷️',platform:'Rentalcars.com',desc:"Dünya geneli en geniş filoya sahip platform. Sigorta seçenekleri, ücretsiz iptal.",badge:"En Çok Kullanılan",color:'var(--teal)',
                     url:`https://www.rentalcars.com/SearchResults.do?dropOffAirport=${res.dest?.code}&collectAirport=${res.dest?.code}&adultAge=30`},
-                  {icon:'🔍',platform:'Kayak',desc:'100+ araç kiralama şirketini karşılaştırır. Fiyat takvimi ile en ucuz günü bulun.',badge:'En İyi Karşılaştırma',color:'#FF690F',
+                  {icon:'🔍',platform:'Kayak',desc:"100+ araç kiralama şirketini karşılaştırır. Fiyat takvimi ile en ucuz günü bulun.",badge:"En İyi Karşılaştırma",color:'#FF690F',
                     url:`https://www.kayak.com.tr/cars/${res.dest?.code}/${res.form.depart}/${res.form.returnDate||res.form.depart}`},
-                  {icon:'🌐',platform:'Google Arabalar',desc:'Google'ın araç kiralama motoru. Tüm büyük firmalar tek sayfada.',badge:'Ücretsiz & Hızlı',color:'#4285F4',
+                  {icon:'🌐',platform:'Google Arabalar',desc:"Google araç kiralama motoru. Tüm büyük firmalar tek sayfada.",badge:"Ücretsiz & Hızlı",color:'#4285F4',
                     url:`https://www.google.com/travel/cars?q=rent+a+car+${res.dest?.name?.split(' ')[0]}`},
                 ].map(p=>(
                   <div key={p.platform} className="rc">
@@ -646,11 +646,11 @@ export default function Home(){
             {rental==='moto'&&(
               <div className="rg">
                 {[
-                  {icon:'🏍️',platform:'Bikesbooking.com',desc:'Motor ve scooter kiralama için uzman platform. 50+ ülkede geçerli.',badge:'Motor Uzmanı',color:'var(--teal)',
+                  {icon:'🏍️',platform:'Bikesbooking.com',desc:"Motor ve scooter kiralama için uzman platform. 50+ ülkede geçerli.",badge:"Motor Uzmanı",color:'var(--teal)',
                     url:`https://www.bikesbooking.com/en/search?destination=${res.dest?.name?.split(' ')[0]}`},
-                  {icon:'🛵',platform:'Rentalcars.com',desc:'Scooter ve motosiklet seçenekleri de mevcut. Sigorta dahil paketler.',badge:'Geniş Seçim',color:'#FF690F',
+                  {icon:'🛵',platform:'Rentalcars.com',desc:"Scooter ve motosiklet seçenekleri de mevcut. Sigorta dahil paketler.",badge:"Geniş Seçim",color:'#FF690F',
                     url:`https://www.rentalcars.com/SearchResults.do?collectAirport=${res.dest?.code}`},
-                  {icon:'🔍',platform:'Kayak',desc:'Motor kiralama karşılaştırması. Günlük fiyatları karşılaştırın.',badge:'Fiyat Karşılaştırma',color:'#4285F4',
+                  {icon:'🔍',platform:'Kayak',desc:"Motor kiralama karşılaştırması. Günlük fiyatları karşılaştırın.",badge:"Fiyat Karşılaştırma",color:'#4285F4',
                     url:`https://www.kayak.com.tr/cars/${res.dest?.code}/${res.form.depart}/${res.form.returnDate||res.form.depart}`},
                 ].map(p=>(
                   <div key={p.platform} className="rc">
@@ -672,11 +672,11 @@ export default function Home(){
             {rental==='bike'&&(
               <div className="rg">
                 {[
-                  {icon:'🚲',platform:'Spinlister',desc:'Yerel bisiklet sahiplerinden kiralama. Şehir bisikleti, MTB, e-bisiklet seçenekleri.',badge:'Yerel & Uygun Fiyat',color:'var(--ok)',
+                  {icon:'🚲',platform:'Spinlister',desc:"Yerel bisiklet sahiplerinden kiralama. Şehir bisikleti, MTB, e-bisiklet seçenekleri.",badge:"Yerel & Uygun Fiyat",color:'var(--ok)',
                     url:`https://www.spinlister.com/en/search?place=${res.dest?.name?.split(' ')[0]}`},
-                  {icon:'⚡',platform:'Lime / Bird',desc:'Elektrikli scooter ve bisiklet paylaşım uygulamaları. Büyük şehirlerde mevcut.',badge:'Anlık Kiralama',color:'#00C851',
+                  {icon:'⚡',platform:'Lime / Bird',desc:"Elektrikli scooter ve bisiklet paylaşım uygulamaları. Büyük şehirlerde mevcut.",badge:"Anlık Kiralama",color:'#00C851',
                     url:`https://www.li.me`},
-                  {icon:'🗺️',platform:'Google Maps',desc:'Yakındaki bisiklet kiralama noktalarını haritada görün. En pratik yöntem.',badge:'Ücretsiz',color:'#4285F4',
+                  {icon:'🗺️',platform:'Google Maps',desc:"Yakındaki bisiklet kiralama noktalarını haritada görün. En pratik yöntem.",badge:"Ücretsiz",color:'#4285F4',
                     url:`https://www.google.com/maps/search/bicycle+rental+near+${res.dest?.name?.split(' ')[0]}`},
                 ].map(p=>(
                   <div key={p.platform} className="rc">
