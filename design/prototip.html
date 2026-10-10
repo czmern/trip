@@ -1,0 +1,553 @@
+<title>WANDR Prototip</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,600;1,400&family=DM+Sans:wght@400;500;600&family=Space+Mono&display=swap">
+<style>
+/* Layout: üstte plan kurma kartı, altta seyahat panosu — solda rota zaman çizelgesi, sağda sekmeli detay */
+:root{
+  --bg:#F7F4EE; --surface:#FFFFFF; --sunk:#EFEBE3; --line:#E0DAD0;
+  --fg:#14181F; --muted:#6B665D;
+  --gold:#A8862E; --gold-soft:#F3E7C4; --teal:#2A7F7F; --teal-soft:#DCEFEE;
+  --ok:#2D8653; --ok-soft:#DFF1E5; --warn:#B86200; --warn-soft:#FCEBD6; --danger:#C0303D; --danger-soft:#F9DEE0;
+  --hero:#0D1117; --hero-fg:#F2EEE6; --hero-muted:#A8A296;
+  --f-display:'Cormorant Garamond',Georgia,'Times New Roman',serif;
+  --f-body:'DM Sans',system-ui,-apple-system,'Segoe UI',sans-serif;
+  --f-mono:'Space Mono',ui-monospace,Menlo,Consolas,monospace;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#0D1117; --surface:#161B22; --sunk:#1C222B; --line:#2A313B;
+  --fg:#ECE7DE; --muted:#9C968B;
+  --gold:#D9B860; --gold-soft:#3A3120; --teal:#4FBFB8; --teal-soft:#16302F;
+  --ok:#5CC287; --ok-soft:#173225; --warn:#F0A04B; --warn-soft:#3A2814; --danger:#F07480; --danger-soft:#3D1A1F;
+  --hero:#06080C; --hero-fg:#F2EEE6; --hero-muted:#A8A296; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#0D1117; --surface:#161B22; --sunk:#1C222B; --line:#2A313B;
+  --fg:#ECE7DE; --muted:#9C968B;
+  --gold:#D9B860; --gold-soft:#3A3120; --teal:#4FBFB8; --teal-soft:#16302F;
+  --ok:#5CC287; --ok-soft:#173225; --warn:#F0A04B; --warn-soft:#3A2814; --danger:#F07480; --danger-soft:#3D1A1F;
+  --hero:#06080C; --hero-fg:#F2EEE6; --hero-muted:#A8A296; color-scheme:dark}
+
+*{box-sizing:border-box}
+[hidden]{display:none!important}
+body{background:var(--bg);color:var(--fg);font-family:var(--f-body);font-size:15px;line-height:1.55}
+.wrap{max-width:1180px;margin:0 auto;padding-inline:16px}
+h1,h2,h3{font-family:var(--f-display);font-weight:600;line-height:1.1;text-wrap:balance;margin:0}
+h1{font-size:clamp(36px,6vw,60px);font-weight:400}
+h2{font-size:28px}
+h3{font-size:21px}
+p{margin:0}
+.label{font-family:var(--f-mono);font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:var(--muted)}
+.num{font-variant-numeric:tabular-nums}
+button,input,select,textarea{font:inherit;color:inherit}
+button{cursor:pointer}
+:focus-visible{outline:2px solid var(--gold);outline-offset:2px}
+
+/* Hero */
+.hero{background:var(--hero);color:var(--hero-fg);padding-block:20px 36px}
+.top{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;margin-bottom:32px}
+.logo{font-family:var(--f-display);font-size:26px;letter-spacing:.3em;color:#D9B860}
+.logo i{color:var(--hero-fg)}
+.proto{font-family:var(--f-mono);font-size:11px;color:var(--hero-muted);border:1px dashed #4A4F57;padding:4px 10px;border-radius:2px}
+.hero h1 em{color:#D9B860}
+.hero .sub{color:var(--hero-muted);max-width:56ch;margin-top:10px}
+.modes{display:inline-flex;margin-top:26px;border:1px solid #333A44;border-radius:4px;overflow:hidden}
+.modes button{background:none;border:0;color:var(--hero-muted);padding:11px 18px;font-weight:500}
+.modes button[aria-pressed="true"]{background:#D9B860;color:#0D1117}
+.planner{margin-top:16px;background:#151A21;border:1px solid #2A313B;border-radius:6px;padding:20px;color:var(--hero-fg)}
+.planner .label{color:var(--hero-muted)}
+.stops{display:grid;gap:8px}
+.stop{display:grid;grid-template-columns:28px minmax(0,1fr) 150px 110px 32px;gap:8px;align-items:center}
+.stop .dot{width:28px;height:28px;border-radius:50%;border:1px solid #D9B860;color:#D9B860;display:grid;place-items:center;font-family:var(--f-mono);font-size:12px}
+.planner input,.planner select,.planner textarea{background:#0D1117;border:1px solid #333A44;border-radius:4px;padding:10px 12px;width:100%;min-width:0;color:var(--hero-fg)}
+.planner input:focus,.planner select:focus,.planner textarea:focus{border-color:#D9B860;outline:none}
+.x{background:none;border:1px solid #333A44;border-radius:4px;color:var(--hero-muted);height:40px}
+.addstop{margin-top:10px;background:none;border:1px dashed #4A4F57;color:var(--hero-muted);border-radius:4px;padding:8px 14px}
+.prefs{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:14px;margin-top:18px}
+.field{display:grid;gap:6px;min-width:0}
+.chips{display:flex;flex-wrap:wrap;gap:6px}
+.chip{border:1px solid var(--line);background:var(--surface);border-radius:999px;padding:5px 12px;font-size:13px}
+.chip[aria-pressed="true"]{background:var(--teal);border-color:var(--teal);color:#fff}
+.planner .chip{background:#0D1117;border-color:#333A44;color:var(--hero-fg)}
+.planner .chip[aria-pressed="true"]{background:#2A7F7F;border-color:#2A7F7F}
+.toggles{display:flex;flex-wrap:wrap;gap:18px;margin-top:16px;align-items:center}
+.tg{display:flex;gap:8px;align-items:center;font-size:14px}
+.tg input{width:18px;height:18px;accent-color:#D9B860}
+.go{margin-left:auto;background:#D9B860;color:#0D1117;border:0;border-radius:4px;padding:12px 22px;font-weight:600}
+.ai-grid{display:grid;grid-template-columns:minmax(0,1.2fr) minmax(0,1fr);gap:18px}
+.ai-grid textarea{min-height:120px;resize:vertical}
+.ideas{display:grid;gap:8px}
+.idea{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:4px 12px;background:#0D1117;border:1px solid #333A44;border-radius:4px;padding:12px 14px;text-align:left;color:var(--hero-fg)}
+.idea[aria-pressed="true"]{border-color:#D9B860}
+.idea b{font-family:var(--f-display);font-size:20px;font-weight:600}
+.idea .p{font-family:var(--f-mono);color:#D9B860;align-self:center;grid-row:span 2}
+.idea small{color:var(--hero-muted)}
+
+/* Board */
+.board{padding-block:28px 48px}
+.trip-head{display:flex;flex-wrap:wrap;gap:18px;align-items:end;justify-content:space-between}
+.stats{display:flex;gap:28px;flex-wrap:wrap}
+.stat .v{font-family:var(--f-display);font-size:30px;font-weight:600}
+.alerts{display:grid;gap:8px;margin-top:20px}
+.alert{display:grid;grid-template-columns:auto minmax(0,1fr) auto;gap:12px;align-items:start;border-radius:4px;padding:12px 14px;border-left:4px solid}
+.alert.d{background:var(--danger-soft);border-color:var(--danger)}
+.alert.w{background:var(--warn-soft);border-color:var(--warn)}
+.alert.i{background:var(--teal-soft);border-color:var(--teal)}
+.sev{font-family:var(--f-mono);font-size:11px;letter-spacing:.08em;text-transform:uppercase;padding-top:2px}
+.alert.d .sev{color:var(--danger)} .alert.w .sev{color:var(--warn)} .alert.i .sev{color:var(--teal)}
+.alert .src{font-size:12px;color:var(--muted);white-space:nowrap}
+.layout{display:grid;grid-template-columns:260px minmax(0,1fr);gap:28px;margin-top:28px}
+.route{position:sticky;top:12px;align-self:start;display:grid;gap:0}
+.leg{display:grid;grid-template-columns:20px minmax(0,1fr);gap:12px;padding-bottom:18px;position:relative}
+.leg::before{content:"";position:absolute;left:9px;top:20px;bottom:0;width:2px;background:var(--line)}
+.leg:last-child::before{display:none}
+.leg .pin{width:20px;height:20px;border-radius:50%;background:var(--surface);border:2px solid var(--gold);margin-top:2px}
+.leg b{display:block;font-size:15px}
+.leg small{color:var(--muted);display:block}
+.leg .tags{display:flex;gap:4px;flex-wrap:wrap;margin-top:6px}
+.tag{font-size:11px;font-family:var(--f-mono);padding:2px 7px;border-radius:2px;background:var(--sunk);color:var(--muted)}
+.tag.ok{background:var(--ok-soft);color:var(--ok)} .tag.w{background:var(--warn-soft);color:var(--warn)} .tag.d{background:var(--danger-soft);color:var(--danger)}
+.tabs{display:flex;gap:2px;overflow-x:auto;border-bottom:1px solid var(--line);scrollbar-width:thin}
+.tabs button{background:none;border:0;border-bottom:2px solid transparent;padding:10px 14px;white-space:nowrap;color:var(--muted);font-weight:500}
+.tabs button[aria-selected="true"]{color:var(--fg);border-bottom-color:var(--gold)}
+.panel{padding-top:22px;display:grid;gap:22px}
+.panel>section{display:grid;gap:12px;min-width:0}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:6px;padding:16px}
+.grid2{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
+.grid3{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}
+.note{font-size:13px;color:var(--muted)}
+.row{display:flex;justify-content:space-between;gap:12px;align-items:baseline}
+.price{font-family:var(--f-mono);font-size:17px}
+.best{color:var(--ok)}
+.src-tag{font-family:var(--f-mono);font-size:10px;letter-spacing:.06em;text-transform:uppercase;color:var(--teal)}
+
+/* Flights */
+.cal-wrap{overflow-x:auto}
+.cal{display:grid;grid-template-columns:repeat(7,minmax(72px,1fr));gap:6px;min-width:520px}
+.day{background:var(--surface);border:1px solid var(--line);border-radius:4px;padding:8px;text-align:left}
+.day small{display:block;color:var(--muted);font-size:12px}
+.day .price{font-size:14px}
+.day.cheap{background:var(--ok-soft);border-color:var(--ok)}
+.day[aria-pressed="true"]{outline:2px solid var(--gold);outline-offset:-2px}
+.tbl-wrap{overflow-x:auto}
+table{width:100%;border-collapse:collapse;font-size:14px}
+th,td{text-align:left;padding:10px 8px;border-bottom:1px solid var(--line)}
+th{font-weight:500;color:var(--muted);font-size:12px}
+td.r,th.r{text-align:right}
+.flight{display:grid;grid-template-columns:110px minmax(0,1fr) auto;gap:14px;align-items:center}
+.flight .air{font-weight:600}
+.flight .times{font-family:var(--f-mono);font-size:14px}
+.flight[hidden]{display:none!important}
+
+/* Weather */
+.wx{display:grid;grid-template-columns:repeat(7,minmax(70px,1fr));gap:6px;min-width:520px}
+.wx.w5{grid-template-columns:repeat(5,minmax(70px,1fr));min-width:380px}
+.wd{background:var(--surface);border:1px solid var(--line);border-radius:4px;padding:8px;text-align:center}
+.wd .t{font-family:var(--f-mono);font-size:14px}
+.wd small{display:block;color:var(--muted);font-size:12px}
+.rainbar{height:4px;background:var(--sunk);border-radius:2px;margin-top:6px;overflow:hidden}
+.rainbar i{display:block;height:100%;background:var(--teal)}
+.pack{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:8px}
+.pack li{list-style:none;background:var(--surface);border:1px solid var(--line);border-radius:4px;padding:10px 12px}
+.pack li small{display:block;color:var(--muted)}
+ul.pack{padding:0;margin:0}
+
+/* Plugs */
+.plugs{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:12px}
+.plug{background:var(--surface);border:1px solid var(--line);border-radius:6px;padding:12px;text-align:center}
+.plug svg{width:100%;max-width:110px;height:auto;display:block;margin:0 auto 8px}
+.plug .face{fill:var(--sunk);stroke:var(--muted);stroke-width:2}
+.plug .hole{fill:var(--fg)}
+.plug .ground{fill:none;stroke:var(--fg);stroke-width:3}
+
+/* Rental seg */
+.seg{display:inline-flex;border:1px solid var(--line);border-radius:4px;overflow:hidden}
+.seg button{background:var(--surface);border:0;padding:8px 16px}
+.seg button[aria-pressed="true"]{background:var(--fg);color:var(--bg)}
+
+/* Design notes */
+.notes{border-top:1px solid var(--line);margin-top:40px;padding-top:28px;display:grid;gap:16px}
+.flow{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px;counter-reset:s}
+.flow .card{counter-increment:s}
+.flow .card::before{content:counter(s);font-family:var(--f-mono);color:var(--gold);display:block;margin-bottom:4px}
+.map td:first-child{font-weight:500}
+
+@media (max-width:900px){
+  .layout{grid-template-columns:minmax(0,1fr)}
+  .route{position:static;grid-auto-flow:column;grid-auto-columns:minmax(170px,1fr);overflow-x:auto;padding-bottom:6px}
+  .leg::before{left:20px;top:9px;right:0;bottom:auto;width:auto;height:2px}
+  .leg{grid-template-columns:minmax(0,1fr)}
+  .prefs{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .grid3,.flow{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .ai-grid{grid-template-columns:minmax(0,1fr)}
+}
+@media (max-width:560px){
+  .stop{grid-template-columns:28px minmax(0,1fr) 32px}
+  .stop input[type=date],.stop select{grid-column:2/3}
+  .prefs,.grid2,.grid3,.flow{grid-template-columns:minmax(0,1fr)}
+  .flight{grid-template-columns:minmax(0,1fr) auto}
+  .flight .air{grid-column:1/-1}
+  .go{margin-left:0;width:100%}
+  .alert{grid-template-columns:minmax(0,1fr)}
+}
+@media (prefers-reduced-motion:no-preference){.panel{animation:in .25s ease-out}@keyframes in{from{opacity:.4;transform:translateY(4px)}to{opacity:1;transform:none}}}
+</style>
+
+<header class="hero">
+  <div class="wrap">
+    <div class="top">
+      <div class="logo">W<i>ANDR</i></div>
+      <span class="proto">Tasarım prototipi · tüm fiyat ve veriler örnektir</span>
+    </div>
+    <h1>Rotanı sen çiz, <em>ya da</em> en ucuzunu biz bulalım</h1>
+    <p class="sub">Uçuş, hava, afet uyarısı, vize, aşı, priz, kur ve kıyafet listesi tek planda. Durak ekledikçe her bölüm o ülkeye göre güncellenir.</p>
+
+    <div class="modes" role="group" aria-label="Planlama modu">
+      <button id="m-manual" aria-pressed="true">Kendi rotam</button>
+      <button id="m-ai" aria-pressed="false">YZ ucuz gezi önersin</button>
+    </div>
+
+    <div class="planner" id="p-manual">
+      <div class="label" style="margin-bottom:10px">Rota</div>
+      <div class="stops" id="stops">
+        <div class="stop"><span class="dot">A</span><input id="s0" value="İstanbul (IST)" aria-label="Kalkış"><input id="d0" type="date" value="2026-11-14" aria-label="Tarih"><select id="n0" aria-label="Gece"><option>Kalkış</option></select><span></span></div>
+        <div class="stop"><span class="dot">B</span><input id="s1" value="Bangkok (BKK)" aria-label="Durak 1"><input id="d1" type="date" value="2026-11-15" aria-label="Tarih"><select id="n1" aria-label="Gece"><option>4 gece</option></select><button class="x" aria-label="Durağı sil">×</button></div>
+        <div class="stop"><span class="dot">C</span><input id="s2" value="Bali (DPS)" aria-label="Durak 2"><input id="d2" type="date" value="2026-11-19" aria-label="Tarih"><select id="n2" aria-label="Gece"><option>8 gece</option></select><button class="x" aria-label="Durağı sil">×</button></div>
+        <div class="stop"><span class="dot">D</span><input id="s3" value="İstanbul (IST)" aria-label="Dönüş"><input id="d3" type="date" value="2026-11-27" aria-label="Tarih"><select id="n3" aria-label="Gece"><option>Dönüş</option></select><span></span></div>
+      </div>
+      <button class="addstop" id="addstop">+ Durak ekle</button>
+
+      <div class="prefs">
+        <div class="field"><span class="label">Pasaport</span><select id="pass"><option>Türkiye</option><option>İsviçre</option><option>Almanya</option></select></div>
+        <div class="field"><span class="label">Elimdeki vizeler</span><div class="chips"><button class="chip" aria-pressed="true">Schengen</button><button class="chip" aria-pressed="false">ABD</button><button class="chip" aria-pressed="false">İngiltere</button></div></div>
+        <div class="field"><span class="label">Yolcu</span><select id="pax"><option>2 yetişkin</option><option>1 yetişkin</option><option>2 yetişkin, 1 çocuk</option></select></div>
+        <div class="field"><span class="label">Havayolu tercihi</span><div class="chips" id="pref-air"><button class="chip" aria-pressed="false">Hepsi</button><button class="chip" aria-pressed="true">THY</button><button class="chip" aria-pressed="true">Qatar</button><button class="chip" aria-pressed="false">Emirates</button></div></div>
+      </div>
+      <div class="toggles">
+        <label class="tg"><input type="checkbox" id="flex" checked> En ucuz gidiş-dönüş tarihlerini öner (±3 gün)</label>
+        <label class="tg"><input type="checkbox" id="pet" checked> Evcil hayvanla seyahat (köpek)</label>
+        <button class="go">Planı oluştur</button>
+      </div>
+    </div>
+
+    <div class="planner" id="p-ai" hidden>
+      <div class="ai-grid">
+        <div class="field">
+          <span class="label">Ne istiyorsun?</span>
+          <textarea id="aiq">Kasımda 10–12 gün, kişi başı 1.500 € bütçe, deniz ve sokak yemeği. İstanbul çıkışlı, Türk pasaportu.</textarea>
+          <div class="chips"><button class="chip" aria-pressed="false">Vizesiz ülkeler</button><button class="chip" aria-pressed="true">Aktarmalı olabilir</button><button class="chip" aria-pressed="false">Evcil hayvan dostu</button></div>
+        </div>
+        <div class="field">
+          <span class="label">YZ önerileri · kişi başı toplam</span>
+          <div class="ideas">
+            <button class="idea" aria-pressed="true"><b>Bangkok + Bali</b><span class="p num">1.390 €</span><small>12 gün · 2 ülke · uçuş 610 €</small></button>
+            <button class="idea" aria-pressed="false"><b>Hanoi + Da Nang</b><span class="p num">1.180 €</span><small>11 gün · e-vize · uçuş 540 €</small></button>
+            <button class="idea" aria-pressed="false"><b>Marakeş + Essaouira</b><span class="p num">890 €</span><small>10 gün · vizesiz · uçuş 260 €</small></button>
+          </div>
+        </div>
+      </div>
+      <div class="toggles"><span class="note" style="color:var(--hero-muted)">Seçtiğin öneri "Kendi rotam" ekranına aktarılır, istediğin gibi düzenlersin.</span><button class="go">Bu rotayı kullan</button></div>
+    </div>
+  </div>
+</header>
+
+<main class="board wrap">
+  <div class="trip-head">
+    <div>
+      <div class="label">Seyahat planı</div>
+      <h2>İstanbul → Bangkok → Bali → İstanbul</h2>
+      <p class="note">14–27 Kasım 2026 · 2 yetişkin · 1 köpek</p>
+    </div>
+    <div class="stats">
+      <div class="stat"><div class="label">Tahmini toplam</div><div class="v num">2.780 €</div></div>
+      <div class="stat"><div class="label">Gün</div><div class="v num">13</div></div>
+      <div class="stat"><div class="label">Uyarı</div><div class="v num" style="color:var(--danger)">3</div></div>
+    </div>
+  </div>
+
+  <div class="alerts" aria-label="Uyarılar">
+    <div class="alert d"><span class="sev">Yanardağ</span><div><b>Bali · Agung Dağı aktivite seviyesi II</b><p class="note">Kraterin 4 km çevresi kapalı. Ngurah Rai havalimanı kül bulutunda kapanabilir; esnek bilet önerilir.</p></div><span class="src">MAGMA Indonesia</span></div>
+    <div class="alert w"><span class="sev">Muson</span><div><b>Bali · Yağmur sezonu başlangıcı</b><p class="note">Öğleden sonra sağanak olasılığı %60. Tekne ve dalış turlarını sabaha planla.</p></div><span class="src">OpenWeather</span></div>
+    <div class="alert w"><span class="sev">Evcil hayvan</span><div><b>Endonezya kuduz nedeniyle köpek girişini kısıtlıyor</b><p class="note">Bali'ye köpek girişi fiilen mümkün değil. Bangkok için ithalat izni + kuduz titresi gerekir.</p></div><span class="src">Karantina otoritesi</span></div>
+    <div class="alert i"><span class="sev">Tsunami</span><div><b>Bali sahil şeridi tsunami tahliye bölgesi</b><p class="note">Otelindeki tahliye rotasını kontrol et. Şu an aktif uyarı yok.</p></div><span class="src">GDACS · USGS</span></div>
+  </div>
+
+  <div class="layout">
+    <aside class="route" aria-label="Rota">
+      <div class="leg"><span class="pin"></span><div><small>14 Kas · Cmt</small><b>İstanbul</b><div class="tags"><span class="tag">Kalkış 01:55</span></div></div></div>
+      <div class="leg"><span class="pin"></span><div><small>15–19 Kas · 4 gece</small><b>Bangkok, Tayland</b><div class="tags"><span class="tag ok">Vizesiz</span><span class="tag w">Adaptör A/B</span><span class="tag">31°</span></div></div></div>
+      <div class="leg"><span class="pin"></span><div><small>19–27 Kas · 8 gece</small><b>Bali, Endonezya</b><div class="tags"><span class="tag w">e-VoA</span><span class="tag ok">Priz aynı</span><span class="tag d">Agung II</span></div></div></div>
+      <div class="leg"><span class="pin"></span><div><small>27 Kas · Cum</small><b>İstanbul</b><div class="tags"><span class="tag">Varış 06:20</span></div></div></div>
+    </aside>
+
+    <div>
+      <div class="tabs" role="tablist" aria-label="Plan bölümleri">
+        <button role="tab" aria-selected="true" aria-controls="t-flight" id="tb-flight">Uçuş</button>
+        <button role="tab" aria-selected="false" aria-controls="t-wx" id="tb-wx">Hava ve kıyafet</button>
+        <button role="tab" aria-selected="false" aria-controls="t-visa" id="tb-visa">Vize ve sağlık</button>
+        <button role="tab" aria-selected="false" aria-controls="t-stay" id="tb-stay">Konaklama ve yemek</button>
+        <button role="tab" aria-selected="false" aria-controls="t-act" id="tb-act">Aktivite</button>
+        <button role="tab" aria-selected="false" aria-controls="t-rent" id="tb-rent">Kiralama</button>
+        <button role="tab" aria-selected="false" aria-controls="t-plug" id="tb-plug">Priz</button>
+        <button role="tab" aria-selected="false" aria-controls="t-fx" id="tb-fx">Para ve kur</button>
+      </div>
+
+      <!-- UÇUŞ -->
+      <div class="panel" role="tabpanel" id="t-flight" aria-labelledby="tb-flight">
+        <section>
+          <div class="row"><h3>En ucuz gidiş tarihi</h3><span class="note">IST → BKK · kişi başı · ±3 gün</span></div>
+          <div class="cal-wrap"><div class="cal" id="cal"></div></div>
+          <p class="note" id="cal-note"></p>
+        </section>
+        <section>
+          <div class="row"><h3>Platform karşılaştırması</h3><span class="note" id="plat-date"></span></div>
+          <div class="card tbl-wrap"><table>
+            <thead><tr><th>Platform</th><th>Aynı uçuş</th><th class="r">Fiyat</th><th class="r">Fark</th></tr></thead>
+            <tbody id="plat"></tbody>
+          </table></div>
+        </section>
+        <section>
+          <div class="row"><h3>Uçuşlar</h3><div class="chips" id="air-filter"><button class="chip" aria-pressed="true" data-a="all">Tümü</button><button class="chip" aria-pressed="false" data-a="THY">THY</button><button class="chip" aria-pressed="false" data-a="Qatar">Qatar</button><button class="chip" aria-pressed="false" data-a="Emirates">Emirates</button><button class="chip" aria-pressed="false" data-a="AirAsia">AirAsia</button></div></div>
+          <div class="card" style="display:grid;gap:14px" id="flights">
+            <div class="flight" data-a="THY"><span class="air">Türk Hava Yolları</span><div><div class="times">01:55 → 15:30</div><small class="note">IST–BKK · direkt · 9 sa 35 dk · 30 kg</small></div><span class="price best num">412 €</span></div>
+            <div class="flight" data-a="Qatar"><span class="air">Qatar Airways</span><div><div class="times">20:10 → 16:05</div><small class="note">1 aktarma DOH · 15 sa 55 dk · 25 kg</small></div><span class="price num">438 €</span></div>
+            <div class="flight" data-a="Emirates"><span class="air">Emirates</span><div><div class="times">15:20 → 12:40</div><small class="note">1 aktarma DXB · 17 sa 20 dk · 30 kg</small></div><span class="price num">471 €</span></div>
+            <div class="flight" data-a="AirAsia"><span class="air">AirAsia</span><div><div class="times">BKK 08:15 → DPS 13:30</div><small class="note">Ara bacak · direkt · 4 sa 15 dk · bagaj ayrı</small></div><span class="price num">96 €</span></div>
+          </div>
+        </section>
+      </div>
+
+      <!-- HAVA -->
+      <div class="panel" role="tabpanel" id="t-wx" aria-labelledby="tb-wx" hidden>
+        <section>
+          <div class="row"><h3>Bangkok · 15–19 Kasım</h3><span class="note">Gündüz / gece · yağış olasılığı</span></div>
+          <div class="cal-wrap"><div class="wx w5" id="wx-bkk"></div></div>
+        </section>
+        <section>
+          <div class="row"><h3>Bali · 19–27 Kasım</h3><span class="note">İlk 7 gün</span></div>
+          <div class="cal-wrap"><div class="wx" id="wx-dps"></div></div>
+          <p class="note">16 günden uzak tarihler için mevsim ortalaması gösterilir; yaklaştıkça tahmine geçer.</p>
+        </section>
+        <section>
+          <h3>Kıyafet önerisi</h3>
+          <ul class="pack">
+            <li><b>Keten gömlek ve şort</b><small>Gündüz 31–33°, nem %75</small></li>
+            <li><b>Hafif yağmurluk</b><small>Bali'de 6 günün 4'ünde öğleden sonra sağanak</small></li>
+            <li><b>Omuz ve dizi örten kıyafet</b><small>Grand Palace ve Bali tapınakları için zorunlu</small></li>
+            <li><b>Su geçirmez sandalet</b><small>Islak zemin, plaj, tekne</small></li>
+            <li><b>İnce hırka</b><small>Uçak ve klimalı AVM'ler</small></li>
+            <li><b>SPF 50 ve sivrisinek kovucu</b><small>UV indeksi 11, dang riski</small></li>
+          </ul>
+        </section>
+      </div>
+
+      <!-- VİZE -->
+      <div class="panel" role="tabpanel" id="t-visa" aria-labelledby="tb-visa" hidden>
+        <section>
+          <h3>Vize · Türk pasaportu, Schengen vizesi var</h3>
+          <div class="grid2">
+            <div class="card"><div class="row"><b>Tayland</b><span class="tag ok">Vizesiz</span></div><p class="note">Turistik giriş vizesiz. Pasaport en az 6 ay geçerli olmalı. Giriş öncesi çevrim içi TDAC formu.</p></div>
+            <div class="card"><div class="row"><b>Endonezya</b><span class="tag w">e-VoA</span></div><p class="note">Varışta vize, çevrim içi alınabilir: 500.000 IDR (~27 €), 30 gün. Bali turist vergisi ayrıca 150.000 IDR.</p></div>
+          </div>
+          <p class="note">Schengen vizen bu rota için bir avantaj sağlamıyor. Avantaj sağladığı ülkelerde (ör. Meksika, Gürcistan) burada gösterilir.</p>
+        </section>
+        <section>
+          <h3>Aşı ve sağlık</h3>
+          <div class="card tbl-wrap"><table>
+            <thead><tr><th>Konu</th><th>Durum</th><th>Not</th></tr></thead>
+            <tbody>
+              <tr><td>Hepatit A</td><td><span class="tag w">Önerilir</span></td><td>Sokak yemeği ve su yoluyla</td></tr>
+              <tr><td>Tifo</td><td><span class="tag w">Önerilir</span></td><td>Uzun kalış ve kırsal bölgeler</td></tr>
+              <tr><td>Dang humması</td><td><span class="tag d">Risk yüksek</span></td><td>Aşı yerine korunma: kovucu, uzun kollu</td></tr>
+              <tr><td>Kuduz</td><td><span class="tag d">Bali'de aktif</span></td><td>Sokak köpekleri ve maymunlardan uzak dur</td></tr>
+              <tr><td>Sarıhumma</td><td><span class="tag ok">Gerekmez</span></td><td>Riskli ülkeden gelmiyorsan</td></tr>
+            </tbody>
+          </table></div>
+          <p class="note">Yola çıkmadan 4–6 hafta önce seyahat sağlığı merkezine danış.</p>
+        </section>
+      </div>
+
+      <!-- KONAKLAMA -->
+      <div class="panel" role="tabpanel" id="t-stay" aria-labelledby="tb-stay" hidden>
+        <section>
+          <div class="row"><h3>Bangkok · evcil hayvan kabul edenler</h3><span class="note">4 gece · 2 kişi</span></div>
+          <div class="grid3">
+            <div class="card"><span class="src-tag">Booking</span><b style="display:block">Ariyasom Villa</b><p class="note">Sukhumvit · köpek kabul · 25 kg altı</p><div class="row"><span class="note">4,7 / 5</span><span class="price num">68 € <small class="note">/gece</small></span></div></div>
+            <div class="card"><span class="src-tag">Airbnb</span><b style="display:block">Ari bahçeli daire</b><p class="note">Ari · bahçe · evcil hayvan ücreti 15 €</p><div class="row"><span class="note">4,9 / 5</span><span class="price best num">52 € <small class="note">/gece</small></span></div></div>
+            <div class="card"><span class="src-tag">Tripadvisor</span><b style="display:block">Hotel Muse</b><p class="note">Langsuan · küçük ırk · ön onay gerekir</p><div class="row"><span class="note">4,6 / 5</span><span class="price num">124 € <small class="note">/gece</small></span></div></div>
+          </div>
+        </section>
+        <section>
+          <div class="row"><h3>Konaklamaya yakın yerel yemek</h3><span class="note">Ari bahçeli daire çevresi</span></div>
+          <div class="card tbl-wrap"><table>
+            <thead><tr><th>Yer</th><th>Ne yenir</th><th class="r">Yürüme</th><th class="r">Kişi başı</th></tr></thead>
+            <tbody>
+              <tr><td>Ari Soi 1 sokak pazarı</td><td>Khao man gai, mango sticky rice</td><td class="r num">4 dk</td><td class="r num">3 €</td></tr>
+              <tr><td>Kuay Teow Reua Ari</td><td>Tekne eriştesi</td><td class="r num">7 dk</td><td class="r num">2 €</td></tr>
+              <tr><td>Som Tam Jay So</td><td>Papaya salatası, ızgara tavuk</td><td class="r num">11 dk</td><td class="r num">5 €</td></tr>
+            </tbody>
+          </table></div>
+        </section>
+      </div>
+
+      <!-- AKTİVİTE -->
+      <div class="panel" role="tabpanel" id="t-act" aria-labelledby="tb-act" hidden>
+        <section>
+          <div class="row"><h3>Önerilen aktiviteler</h3><div class="chips"><button class="chip" aria-pressed="true">GetYourGuide</button><button class="chip" aria-pressed="true">Tripadvisor</button></div></div>
+          <div class="grid2">
+            <div class="card"><span class="src-tag">GetYourGuide</span><b style="display:block">Damnoen Saduak yüzen pazar</b><p class="note">Bangkok · yarım gün · ücretsiz iptal</p><div class="row"><span class="note">4,6 · 12.400 yorum</span><span class="price num">29 €</span></div></div>
+            <div class="card"><span class="src-tag">Tripadvisor</span><b style="display:block">Wat Pho ve Grand Palace yürüyüşü</b><p class="note">Bangkok · 4 saat · omuz kapalı kıyafet</p><div class="row"><span class="note">4,8 · 3.900 yorum</span><span class="price num">34 €</span></div></div>
+            <div class="card"><span class="src-tag">GetYourGuide</span><b style="display:block">Ubud pirinç terasları ve şelaleler</b><p class="note">Bali · tam gün · sabah çıkış (yağmur öncesi)</p><div class="row"><span class="note">4,7 · 8.100 yorum</span><span class="price num">38 €</span></div></div>
+            <div class="card"><span class="src-tag">Tripadvisor</span><b style="display:block">Nusa Penida tekne turu</b><p class="note">Bali · deniz durumuna bağlı, hava sekmesine bak</p><div class="row"><span class="note">4,5 · 5.200 yorum</span><span class="price num">55 €</span></div></div>
+          </div>
+        </section>
+      </div>
+
+      <!-- KİRALAMA -->
+      <div class="panel" role="tabpanel" id="t-rent" aria-labelledby="tb-rent" hidden>
+        <section>
+          <div class="row"><h3>Bali · 8 gün kiralama</h3><div class="seg" role="group" aria-label="Araç türü"><button aria-pressed="false" data-r="car">Araba</button><button aria-pressed="true" data-r="moto">Motor</button><button aria-pressed="false" data-r="bike">Bisiklet</button></div></div>
+          <div class="grid3" id="rent"></div>
+          <div class="alert w"><span class="sev">Ehliyet</span><div><b id="rent-warn"></b></div><span></span></div>
+        </section>
+      </div>
+
+      <!-- PRİZ -->
+      <div class="panel" role="tabpanel" id="t-plug" aria-labelledby="tb-plug" hidden>
+        <section>
+          <div class="row"><h3>Priz tipleri</h3><span class="note">Türkiye: C / F · 230 V</span></div>
+          <div class="plugs">
+            <div class="plug"><svg viewBox="0 0 100 100" aria-hidden="true"><rect class="face" x="10" y="10" width="80" height="80" rx="12"/><rect class="hole" x="34" y="34" width="6" height="26" rx="1"/><rect class="hole" x="60" y="34" width="6" height="26" rx="1"/></svg><b>Tip A</b><p class="note">Tayland · adaptör gerekir</p></div>
+            <div class="plug"><svg viewBox="0 0 100 100" aria-hidden="true"><rect class="face" x="10" y="10" width="80" height="80" rx="12"/><rect class="hole" x="34" y="28" width="6" height="24" rx="1"/><rect class="hole" x="60" y="28" width="6" height="24" rx="1"/><circle class="hole" cx="50" cy="68" r="6"/></svg><b>Tip B</b><p class="note">Tayland · adaptör gerekir</p></div>
+            <div class="plug"><svg viewBox="0 0 100 100" aria-hidden="true"><circle class="face" cx="50" cy="50" r="40"/><circle class="hole" cx="36" cy="50" r="5"/><circle class="hole" cx="64" cy="50" r="5"/></svg><b>Tip C</b><p class="note">Tayland ve Bali · Türkiye fişin uyar</p></div>
+            <div class="plug"><svg viewBox="0 0 100 100" aria-hidden="true"><circle class="face" cx="50" cy="50" r="40"/><circle class="hole" cx="36" cy="50" r="5"/><circle class="hole" cx="64" cy="50" r="5"/><path class="ground" d="M50 12v8M50 80v8"/></svg><b>Tip F</b><p class="note">Bali · Türkiye ile aynı</p></div>
+            <div class="plug"><svg viewBox="0 0 100 100" aria-hidden="true"><circle class="face" cx="50" cy="50" r="40"/><circle class="hole" cx="36" cy="44" r="5"/><circle class="hole" cx="64" cy="44" r="5"/><circle class="hole" cx="50" cy="66" r="5"/></svg><b>Tip O</b><p class="note">Tayland · topraklı, C fiş girer</p></div>
+          </div>
+          <p class="note">Prototipte çizim var. Üründe her tip için gerçek priz fotoğrafı kullanılacak. Tayland'da bazı prizler yalnız A/B kabul ediyor, bu yüzden 1 adet universal adaptör yeterli.</p>
+        </section>
+      </div>
+
+      <!-- PARA -->
+      <div class="panel" role="tabpanel" id="t-fx" aria-labelledby="tb-fx" hidden>
+        <section>
+          <div class="row"><h3>Güncel kur</h3><span class="note">Örnek değerler · üründe canlı</span></div>
+          <div class="grid3">
+            <div class="card"><div class="label">1 EUR</div><div class="price num" style="font-size:22px">40,85 TRY</div><p class="note">Ana para birimin</p></div>
+            <div class="card"><div class="label">100 THB</div><div class="price num" style="font-size:22px">2,62 €</div><p class="note">Bangkok · 4 gün ≈ 9.500 THB</p></div>
+            <div class="card"><div class="label">100.000 IDR</div><div class="price num" style="font-size:22px">5,40 €</div><p class="note">Bali · 8 gün ≈ 6,5 M IDR</p></div>
+          </div>
+        </section>
+        <section>
+          <h3>Para önerileri</h3>
+          <ul class="pack">
+            <li><b>Euro götür, yerelde boz</b><small>TRY yerine EUR bozdurmak %3–5 daha iyi kur verir</small></li>
+            <li><b>Tayland ATM ücreti 220 THB</b><small>Az sayıda büyük çekim yap, ya da SuperRich döviz bürosu</small></li>
+            <li><b>Bali'de nakit ağırlıklı</b><small>Warunglar ve pazarlar kart almaz</small></li>
+            <li><b>Kartla ödemede yerel para seç</b><small>"EUR ile öde" seçeneği gizli kur farkı ekler</small></li>
+          </ul>
+        </section>
+      </div>
+    </div>
+  </div>
+
+  <section class="notes">
+    <div>
+      <div class="label">Tasarım notu</div>
+      <h2>Ekran akışı ve veri kaynakları</h2>
+    </div>
+    <div class="flow">
+      <div class="card"><b>Plan kur</b><p class="note">Kendi rotam veya YZ önerisi. YZ önerisi seçilince rota formuna dolar.</p></div>
+      <div class="card"><b>Uyarılar</b><p class="note">Afet, mevsim, vize ve evcil hayvan engelleri en üstte, renk ve etiketle.</p></div>
+      <div class="card"><b>Rota çizelgesi</b><p class="note">Her durakta vize, priz, sıcaklık ve risk etiketi. Durak eklemek tüm sekmeleri günceller.</p></div>
+      <div class="card"><b>Sekmeler</b><p class="note">Uçuş, hava ve kıyafet, vize ve sağlık, konaklama, aktivite, kiralama, priz, kur.</p></div>
+    </div>
+    <div class="card tbl-wrap"><table class="map">
+      <thead><tr><th>Bölüm</th><th>Önerilen kaynak</th><th>Mevcut kodda</th></tr></thead>
+      <tbody>
+        <tr><td>Uçuş fiyatı, tarih önerisi</td><td>Amadeus (cheapest dates), Kiwi Tequila, Skyscanner/Kayak ortaklık API'leri</td><td><span class="tag ok">/api/flights</span></td></tr>
+        <tr><td>Hava</td><td>OpenWeather; 16 günden uzaksa iklim ortalaması</td><td><span class="tag ok">/api/weather</span></td></tr>
+        <tr><td>Afet</td><td>GDACS, USGS deprem, MAGMA/Smithsonian yanardağ</td><td><span class="tag ok">/api/alerts</span></td></tr>
+        <tr><td>Vize, aşı</td><td>Kendi veri tablosu + Sherpa/IATA Timatic; CDC/WHO</td><td><span class="tag ok">/api/visa</span></td></tr>
+        <tr><td>Kur</td><td>ExchangeRate-API</td><td><span class="tag ok">/api/currency</span></td></tr>
+        <tr><td>Konaklama, yemek</td><td>Booking/Airbnb ortaklık, Tripadvisor, Google Places</td><td><span class="tag w">Yok</span></td></tr>
+        <tr><td>Aktivite</td><td>GetYourGuide Partner API, Tripadvisor</td><td><span class="tag w">Yok</span></td></tr>
+        <tr><td>Kiralama</td><td>DiscoverCars, yerel scooter/bisiklet ortakları</td><td><span class="tag w">Yok</span></td></tr>
+        <tr><td>YZ rota önerisi</td><td>Claude API + uçuş/kur verisiyle bütçe hesabı</td><td><span class="tag w">Yalnız arayüz</span></td></tr>
+      </tbody>
+    </table></div>
+  </section>
+</main>
+
+<script>
+(function(){
+  const $=s=>document.querySelector(s), $$=s=>[...document.querySelectorAll(s)];
+  const press=(group,btn)=>group.forEach(b=>b.setAttribute('aria-pressed',b===btn?'true':'false'));
+
+  // Mod
+  const mm=$('#m-manual'), ma=$('#m-ai');
+  [mm,ma].forEach(b=>b.addEventListener('click',()=>{press([mm,ma],b);$('#p-manual').hidden=b!==mm;$('#p-ai').hidden=b!==ma;}));
+  $$('.idea').forEach(b=>b.addEventListener('click',()=>press($$('.idea'),b)));
+
+  // Çip toggle (filtre olmayanlar)
+  $$('.chip').forEach(c=>{ if(c.closest('#air-filter'))return; c.addEventListener('click',()=>c.setAttribute('aria-pressed',c.getAttribute('aria-pressed')==='true'?'false':'true')); });
+
+  // Durak ekle
+  let n=4;
+  $('#addstop').addEventListener('click',()=>{
+    const rows=$$('#stops .stop'), last=rows[rows.length-1];
+    const row=document.createElement('div'); row.className='stop';
+    row.innerHTML=`<span class="dot"></span><input id="s${n}" placeholder="Şehir veya havalimanı" aria-label="Yeni durak"><input id="d${n}" type="date" aria-label="Tarih"><select id="n${n}" aria-label="Gece"><option>3 gece</option><option>5 gece</option></select><button class="x" aria-label="Durağı sil">×</button>`;
+    n++; last.before(row); relabel(); row.querySelector('input').focus();
+  });
+  $('#stops').addEventListener('click',e=>{ if(e.target.classList.contains('x')){ e.target.closest('.stop').remove(); relabel(); }});
+  function relabel(){ $$('#stops .dot').forEach((d,i)=>d.textContent=String.fromCharCode(65+i)); }
+
+  // Evcil hayvan
+  $('#pet').addEventListener('change',e=>{ $$('.alert').forEach(a=>{ if(a.textContent.includes('köpek girişini')) a.hidden=!e.target.checked; }); });
+
+  // Sekmeler
+  const tabs=$$('[role=tab]');
+  tabs.forEach(t=>t.addEventListener('click',()=>{
+    tabs.forEach(x=>{const on=x===t;x.setAttribute('aria-selected',on);$('#'+x.getAttribute('aria-controls')).hidden=!on;});
+  }));
+
+  // Esnek tarih takvimi
+  const days=[['11 Kas','Çar',438],['12 Kas','Per',401],['13 Kas','Cum',455],['14 Kas','Cmt',412],['15 Kas','Paz',489],['16 Kas','Pzt',372],['17 Kas','Sal',386]];
+  const min=Math.min(...days.map(d=>d[2]));
+  const cal=$('#cal');
+  days.forEach((d,i)=>{
+    const b=document.createElement('button');
+    b.className='day'+(d[2]===min?' cheap':''); b.setAttribute('aria-pressed',i===3?'true':'false');
+    b.innerHTML=`<small>${d[1]}</small><b>${d[0]}</b><div class="price num">${d[2]} €</div>`;
+    b.addEventListener('click',()=>{press($$('.day'),b);renderPlat(d);});
+    cal.appendChild(b);
+  });
+  const sel=days[3], cheap=days.find(d=>d[2]===min);
+  $('#cal-note').textContent=`Seçili: ${sel[0]}. ${cheap[0]} gidersen kişi başı ${sel[2]-cheap[2]} € tasarruf. Dönüşü de 2 gün kaydırırsan süre aynı kalır.`;
+  const plats=[['Google Flights',0],['Skyscanner',-6],['Kiwi.com',-14],['Kayak',4],['Trip.com',-2],['THY (doğrudan)',9]];
+  function renderPlat(d){
+    const rows=plats.map(([p,o])=>[p,d[2]+o]); const lo=Math.min(...rows.map(r=>r[1]));
+    $('#plat').innerHTML=rows.map(([p,v])=>`<tr><td>${p}</td><td class="note">THY · 01:55 · direkt</td><td class="r price num ${v===lo?'best':''}">${v} €</td><td class="r num note">${v===lo?'en ucuz':'+'+(v-lo)+' €'}</td></tr>`).join('');
+    $('#plat-date').textContent=`${d[0]} · IST → BKK`;
+  }
+  renderPlat(sel);
+
+  // Havayolu filtresi
+  const af=$$('#air-filter .chip');
+  af.forEach(c=>c.addEventListener('click',()=>{press(af,c);const a=c.dataset.a;$$('#flights .flight').forEach(f=>f.hidden=a!=='all'&&f.dataset.a!==a);}));
+
+  // Hava
+  const wx=(el,rows)=>{$(el).innerHTML=rows.map(([d,c,h,l,r])=>`<div class="wd"><small>${d}</small><b style="font-size:13px">${c}</b><div class="t num">${h}° / ${l}°</div><small class="num">%${r} yağış</small><div class="rainbar"><i style="width:${r}%"></i></div></div>`).join('');};
+  wx('#wx-bkk',[['15 Kas','Güneşli',32,24,10],['16 Kas','Parçalı',33,25,20],['17 Kas','Güneşli',32,24,10],['18 Kas','Parçalı',31,24,30],['19 Kas','Güneşli',32,25,10]]);
+  wx('#wx-dps',[['19 Kas','Sağanak',31,25,60],['20 Kas','Parçalı',32,25,40],['21 Kas','Sağanak',30,24,70],['22 Kas','Güneşli',32,25,20],['23 Kas','Sağanak',30,24,65],['24 Kas','Parçalı',31,25,45],['25 Kas','Fırtına',29,24,80]]);
+
+  // Kiralama
+  const rent={
+    car:{w:'Bali trafiği yoğun; şoförlü araç (günlük ~35 €) çoğu zaman daha mantıklı. Uluslararası ehliyet gerekir.',items:[['DiscoverCars','Toyota Avanza · 7 kişilik','24 €'],['Bali Car Rental','Daihatsu Xenia · manuel','19 €'],['Şoförlü','10 saat · yakıt dahil','35 €']]},
+    moto:{w:'Endonezya\'da motor için A sınıfı uluslararası ehliyet şart. Yoksa sigorta kazada ödemez ve polis cezası 250.000 IDR.',items:[['Bali Bike Rental','Honda Scoopy 110 cc','5 €'],['Ubud Scooter','Yamaha NMAX 155 cc','8 €'],['Kiwi Rental','Honda Vario 125 · 2 kask','6 €']]},
+    bike:{w:'Bisiklet için ehliyet gerekmez. Ubud çevresi tepelik; elektrikli bisiklet önerilir.',items:[['Ubud Cycling','Şehir bisikleti','3 €'],['E-Bike Bali','Elektrikli · 60 km menzil','12 €'],['Green Bike','Dağ bisikleti + kask','7 €']]}
+  };
+  const rb=$$('.seg button');
+  function renderRent(k){const r=rent[k];$('#rent').innerHTML=r.items.map(([s,m,p],i)=>`<div class="card"><span class="src-tag">${s}</span><b style="display:block">${m}</b><div class="row"><span class="note">günlük</span><span class="price num ${i===0&&k!=='car'||i===1&&k==='car'?'best':''}">${p}</span></div></div>`).join('');$('#rent-warn').textContent=r.w;}
+  rb.forEach(b=>b.addEventListener('click',()=>{press(rb,b);renderRent(b.dataset.r);}));
+  renderRent('moto');
+})();
+</script>
