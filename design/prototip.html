@@ -189,6 +189,17 @@ ul.pack{padding:0;margin:0}
   .alert{grid-template-columns:minmax(0,1fr)}
 }
 @media (prefers-reduced-motion:no-preference){.panel{animation:in .25s ease-out}@keyframes in{from{opacity:.4;transform:translateY(4px)}to{opacity:1;transform:none}}}
+
+/* Yazdıkça öneri listesi */
+.ac{position:absolute;z-index:50;max-width:calc(100vw - 32px);max-height:340px;overflow-y:auto;background:#151A21;border:1px solid #333A44;border-radius:6px;box-shadow:0 12px 32px rgba(0,0,0,.45);color:#F2EEE6;padding-block:4px}
+.ac-g{display:flex;justify-content:space-between;gap:8px;padding:8px 14px 4px;font-family:var(--f-mono);font-size:10px;letter-spacing:.12em;text-transform:uppercase;color:#4FBFB8}
+.ac-back{background:none;border:0;color:#A8A296;font-size:11px;letter-spacing:0;text-transform:none;padding:0}
+.ac-o{display:flex;justify-content:space-between;align-items:baseline;gap:12px;padding:9px 14px;cursor:pointer}
+.ac-o.on{background:#2A2618}
+.ac-o small{color:#A8A296;font-size:12px;white-space:nowrap}
+.ac-o code{font-family:var(--f-mono);font-size:12px;color:#D9B860;margin-right:6px}
+.ac mark{background:none;color:#D9B860;font-weight:600}
+.ac-empty{padding:12px 14px;font-size:13px;color:#A8A296}
 </style>
 
 <header class="hero">
@@ -198,7 +209,7 @@ ul.pack{padding:0;margin:0}
       <span class="proto">Tasarım prototipi · tüm fiyat ve veriler örnektir</span>
     </div>
     <h1>Rotanı sen çiz, <em>ya da</em> en ucuzunu biz bulalım</h1>
-    <p class="sub">Uçuş, hava, afet uyarısı, vize, aşı, priz, kur ve kıyafet listesi tek planda. Durak ekledikçe her bölüm o ülkeye göre güncellenir.</p>
+    <p class="sub">Durak kutusuna yazmaya başla: ülke, şehir veya havalimanı kodu önerileri anında gelir. Uçuş, hava, afet uyarısı, vize, aşı, priz, kur ve kıyafet listesi tek planda. Durak ekledikçe her bölüm o ülkeye göre güncellenir.</p>
 
     <div class="modes" role="group" aria-label="Planlama modu">
       <button id="m-manual" aria-pressed="true">Kendi rotam</button>
@@ -208,10 +219,10 @@ ul.pack{padding:0;margin:0}
     <div class="planner" id="p-manual">
       <div class="label" style="margin-bottom:10px">Rota</div>
       <div class="stops" id="stops">
-        <div class="stop"><span class="dot">A</span><input id="s0" value="İstanbul (IST)" aria-label="Kalkış"><input id="d0" type="date" value="2026-11-14" aria-label="Tarih"><select id="n0" aria-label="Gece"><option>Kalkış</option></select><span></span></div>
-        <div class="stop"><span class="dot">B</span><input id="s1" value="Bangkok (BKK)" aria-label="Durak 1"><input id="d1" type="date" value="2026-11-15" aria-label="Tarih"><select id="n1" aria-label="Gece"><option>4 gece</option></select><button class="x" aria-label="Durağı sil">×</button></div>
-        <div class="stop"><span class="dot">C</span><input id="s2" value="Bali (DPS)" aria-label="Durak 2"><input id="d2" type="date" value="2026-11-19" aria-label="Tarih"><select id="n2" aria-label="Gece"><option>8 gece</option></select><button class="x" aria-label="Durağı sil">×</button></div>
-        <div class="stop"><span class="dot">D</span><input id="s3" value="İstanbul (IST)" aria-label="Dönüş"><input id="d3" type="date" value="2026-11-27" aria-label="Tarih"><select id="n3" aria-label="Gece"><option>Dönüş</option></select><span></span></div>
+        <div class="stop"><span class="dot">A</span><input id="s0" value="İstanbul Atatürk (IST)" aria-label="Kalkış"><input id="d0" type="date" value="2026-11-14" aria-label="Tarih"><select id="n0" aria-label="Gece"><option>Kalkış</option></select><span></span></div>
+        <div class="stop"><span class="dot">B</span><input id="s1" value="Bangkok Suvarnabhumi (BKK)" aria-label="Durak 1"><input id="d1" type="date" value="2026-11-15" aria-label="Tarih"><select id="n1" aria-label="Gece"><option>4 gece</option></select><button class="x" aria-label="Durağı sil">×</button></div>
+        <div class="stop"><span class="dot">C</span><input id="s2" value="Bali Ngurah Rai (DPS)" aria-label="Durak 2"><input id="d2" type="date" value="2026-11-19" aria-label="Tarih"><select id="n2" aria-label="Gece"><option>8 gece</option></select><button class="x" aria-label="Durağı sil">×</button></div>
+        <div class="stop"><span class="dot">D</span><input id="s3" value="İstanbul Atatürk (IST)" aria-label="Dönüş"><input id="d3" type="date" value="2026-11-27" aria-label="Tarih"><select id="n3" aria-label="Gece"><option>Dönüş</option></select><span></span></div>
       </div>
       <button class="addstop" id="addstop">+ Durak ekle</button>
 
@@ -476,6 +487,170 @@ ul.pack{padding:0;margin:0}
   </section>
 </main>
 
+<script>
+const ALL_AIRPORTS=[ {code:'IST',name:'İstanbul Atatürk',country:'🇹🇷 Türkiye'}, {code:'SAW',name:'İstanbul Sabiha Gökçen',country:'🇹🇷 Türkiye'}, {code:'AYT',name:'Antalya',country:'🇹🇷 Türkiye'}, {code:'ESB',name:'Ankara Esenboğa',country:'🇹🇷 Türkiye'}, {code:'ADB',name:'İzmir Adnan Menderes',country:'🇹🇷 Türkiye'}, {code:'ADA',name:'Adana',country:'🇹🇷 Türkiye'}, {code:'TZX',name:'Trabzon',country:'🇹🇷 Türkiye'}, {code:'ZRH',name:'Zürih',country:'🇨🇭 İsviçre'}, {code:'GVA',name:'Cenevre',country:'🇨🇭 İsviçre'}, {code:'BSL',name:'Basel-Mülhausen',country:'🇨🇭 İsviçre'}, {code:'FRA',name:'Frankfurt',country:'🇩🇪 Almanya'}, {code:'MUC',name:'Münih',country:'🇩🇪 Almanya'}, {code:'BER',name:'Berlin Brandenburg',country:'🇩🇪 Almanya'}, {code:'DUS',name:'Düsseldorf',country:'🇩🇪 Almanya'}, {code:'HAM',name:'Hamburg',country:'🇩🇪 Almanya'}, {code:'STR',name:'Stuttgart',country:'🇩🇪 Almanya'}, {code:'VIE',name:'Viyana',country:'🇦🇹 Avusturya'}, {code:'DPS',name:'Bali Ngurah Rai',country:'🇮🇩 Endonezya'}, {code:'CGK',name:'Jakarta Soekarno-Hatta',country:'🇮🇩 Endonezya'}, {code:'SUB',name:'Surabaya',country:'🇮🇩 Endonezya'}, {code:'BKK',name:'Bangkok Suvarnabhumi',country:'🇹🇭 Tayland'}, {code:'HKT',name:'Phuket',country:'🇹🇭 Tayland'}, {code:'CNX',name:'Chiang Mai',country:'🇹🇭 Tayland'}, {code:'USM',name:'Koh Samui',country:'🇹🇭 Tayland'}, {code:'NRT',name:'Tokyo Narita',country:'🇯🇵 Japonya'}, {code:'KIX',name:'Osaka Kansai',country:'🇯🇵 Japonya'}, {code:'CTS',name:'Sapporo',country:'🇯🇵 Japonya'}, {code:'FUK',name:'Fukuoka',country:'🇯🇵 Japonya'}, {code:'OKA',name:'Okinawa',country:'🇯🇵 Japonya'}, {code:'SIN',name:'Singapur Changi',country:'🇸🇬 Singapur'}, {code:'HAN',name:'Hanoi Noi Bai',country:'🇻🇳 Vietnam'}, {code:'SGN',name:'Ho Chi Minh Tân Sơn Nhất',country:'🇻🇳 Vietnam'}, {code:'DAD',name:'Da Nang',country:'🇻🇳 Vietnam'}, {code:'KUL',name:'Kuala Lumpur KLIA',country:'🇲🇾 Malezya'}, {code:'PEN',name:'Penang',country:'🇲🇾 Malezya'}, {code:'LGK',name:'Langkawi',country:'🇲🇾 Malezya'}, {code:'DEL',name:'New Delhi IGI',country:'🇮🇳 Hindistan'}, {code:'BOM',name:'Mumbai Chhatrapati',country:'🇮🇳 Hindistan'}, {code:'GOI',name:'Goa',country:'🇮🇳 Hindistan'}, {code:'MAA',name:'Chennai',country:'🇮🇳 Hindistan'}, {code:'MNL',name:'Manila Ninoy Aquino',country:'🇵🇭 Filipinler'}, {code:'CEB',name:'Cebu',country:'🇵🇭 Filipinler'}, {code:'PNH',name:'Phnom Penh',country:'🇰🇭 Kamboçya'}, {code:'REP',name:'Siem Reap (Angkor)',country:'🇰🇭 Kamboçya'}, {code:'CMB',name:'Colombo',country:'🇱🇰 Sri Lanka'}, {code:'MLE',name:'Malé',country:'🇲🇻 Maldivler'}, {code:'KTM',name:'Katmandu',country:'🇳🇵 Nepal'}, {code:'DXB',name:'Dubai',country:'🇦🇪 BAE'}, {code:'AUH',name:'Abu Dhabi',country:'🇦🇪 BAE'}, {code:'DOH',name:'Doha Hamad',country:'🇶🇦 Katar'}, {code:'AMM',name:'Amman Queen Alia',country:'🇯🇴 Ürdün'}, {code:'AQJ',name:'Akabe (Aqaba)',country:'🇯🇴 Ürdün'}, {code:'TBS',name:'Tiflis',country:'🇬🇪 Gürcistan'}, {code:'EVN',name:'Erivan',country:'🇦🇲 Ermenistan'}, {code:'GYD',name:'Bakü Haydar Aliyev',country:'🇦🇿 Azerbaycan'}, {code:'TAS',name:'Taşkent',country:'🇺🇿 Özbekistan'}, {code:'CDG',name:'Paris Charles de Gaulle',country:'🇫🇷 Fransa'}, {code:'ORY',name:'Paris Orly',country:'🇫🇷 Fransa'}, {code:'NCE',name:'Nice Cote d Azur',country:'🇫🇷 Fransa'}, {code:'LYS',name:'Lyon Saint-Exupery',country:'🇫🇷 Fransa'}, {code:'MRS',name:'Marsilya',country:'🇫🇷 Fransa'}, {code:'MAD',name:'Madrid Barajas',country:'🇪🇸 İspanya'}, {code:'BCN',name:'Barselona El Prat',country:'🇪🇸 İspanya'}, {code:'AGP',name:'Malaga Costa del Sol',country:'🇪🇸 İspanya'}, {code:'PMI',name:'Palma de Mallorca',country:'🇪🇸 İspanya'}, {code:'TFS',name:'Tenerife Güney',country:'🇪🇸 İspanya'}, {code:'LPA',name:'Gran Canaria',country:'🇪🇸 İspanya'}, {code:'IBZ',name:'Ibiza',country:'🇪🇸 İspanya'}, {code:'SVQ',name:'Sevilla',country:'🇪🇸 İspanya'}, {code:'FCO',name:'Roma Fiumicino',country:'🇮🇹 İtalya'}, {code:'MXP',name:'Milano Malpensa',country:'🇮🇹 İtalya'}, {code:'VCE',name:'Venedik Marco Polo',country:'🇮🇹 İtalya'}, {code:'NAP',name:'Napoli',country:'🇮🇹 İtalya'}, {code:'CTA',name:'Catania (Sicilya)',country:'🇮🇹 İtalya'}, {code:'PMO',name:'Palermo',country:'🇮🇹 İtalya'}, {code:'BLQ',name:'Bologna',country:'🇮🇹 İtalya'}, {code:'LHR',name:'Londra Heathrow',country:'🇬🇧 İngiltere'}, {code:'LGW',name:'Londra Gatwick',country:'🇬🇧 İngiltere'}, {code:'STN',name:'Londra Stansted',country:'🇬🇧 İngiltere'}, {code:'MAN',name:'Manchester',country:'🇬🇧 İngiltere'}, {code:'EDI',name:'Edinburgh',country:'🇬🇧 İngiltere'}, {code:'ATH',name:'Atina Eleftherios Venizelos',country:'🇬🇷 Yunanistan'}, {code:'HER',name:'Girit Iraklio',country:'🇬🇷 Yunanistan'}, {code:'RHO',name:'Rodos',country:'🇬🇷 Yunanistan'}, {code:'SKG',name:'Selanik',country:'🇬🇷 Yunanistan'}, {code:'CFU',name:'Korfu',country:'🇬🇷 Yunanistan'}, {code:'KGS',name:'Kos',country:'🇬🇷 Yunanistan'}, {code:'JMK',name:'Mykonos',country:'🇬🇷 Yunanistan'}, {code:'JTR',name:'Santorini',country:'🇬🇷 Yunanistan'}, {code:'CHQ',name:'Hanya (Girit)',country:'🇬🇷 Yunanistan'}, {code:'LIS',name:'Lizbon Humberto Delgado',country:'🇵🇹 Portekiz'}, {code:'OPO',name:'Porto',country:'🇵🇹 Portekiz'}, {code:'FAO',name:'Faro (Algarve)',country:'🇵🇹 Portekiz'}, {code:'FNC',name:'Funchal (Madeira)',country:'🇵🇹 Portekiz'}, {code:'AMS',name:'Amsterdam Schiphol',country:'🇳🇱 Hollanda'}, {code:'BRU',name:'Brüksel Zaventem',country:'🇧🇪 Belçika'}, {code:'OSL',name:'Oslo Gardermoen',country:'🇳🇴 Norveç'}, {code:'ARN',name:'Stockholm Arlanda',country:'🇸🇪 İsveç'}, {code:'GOT',name:'Göteborg',country:'🇸🇪 İsveç'}, {code:'CPH',name:'Kopenhag',country:'🇩🇰 Danimarka'}, {code:'HEL',name:'Helsinki Vantaa',country:'🇫🇮 Finlandiya'}, {code:'PRG',name:'Prag Václav Havel',country:'🇨🇿 Çek Cumh.'}, {code:'WAW',name:'Varşova Chopin',country:'🇵🇱 Polonya'}, {code:'KRK',name:'Kraków',country:'🇵🇱 Polonya'}, {code:'BUD',name:'Budapeşte Ferenc Liszt',country:'🇭🇺 Macaristan'}, {code:'ZAG',name:'Zagreb',country:'🇭🇷 Hırvatistan'}, {code:'SPU',name:'Split',country:'🇭🇷 Hırvatistan'}, {code:'DBV',name:'Dubrovnik',country:'🇭🇷 Hırvatistan'}, {code:'JFK',name:'New York JFK',country:'🇺🇸 ABD'}, {code:'LAX',name:'Los Angeles',country:'🇺🇸 ABD'}, {code:'MIA',name:'Miami',country:'🇺🇸 ABD'}, {code:'ORD',name:'Chicago OHare',country:'🇺🇸 ABD'}, {code:'SFO',name:'San Francisco',country:'🇺🇸 ABD'}, {code:'LAS',name:'Las Vegas McCarran',country:'🇺🇸 ABD'}, {code:'MCO',name:'Orlando',country:'🇺🇸 ABD'}, {code:'BOS',name:'Boston Logan',country:'🇺🇸 ABD'}, {code:'YYZ',name:'Toronto Pearson',country:'🇨🇦 Kanada'}, {code:'YVR',name:'Vancouver',country:'🇨🇦 Kanada'}, {code:'YUL',name:'Montreal',country:'🇨🇦 Kanada'}, {code:'CUN',name:'Cancun',country:'🇲🇽 Meksika'}, {code:'MEX',name:'Mexico City',country:'🇲🇽 Meksika'}, {code:'SJD',name:'Los Cabos',country:'🇲🇽 Meksika'}, {code:'GRU',name:'São Paulo Guarulhos',country:'🇧🇷 Brezilya'}, {code:'GIG',name:'Rio de Janeiro Galeão',country:'🇧🇷 Brezilya'}, {code:'REC',name:'Recife',country:'🇧🇷 Brezilya'}, {code:'EZE',name:'Buenos Aires Ezeiza',country:'🇦🇷 Arjantin'}, {code:'HAV',name:'Havana José Martí',country:'🇨🇺 Küba'}, {code:'RAK',name:'Marakeş Menara',country:'🇲🇦 Fas'}, {code:'CMN',name:'Kazablanka Mohammed V',country:'🇲🇦 Fas'}, {code:'AGA',name:'Agadir',country:'🇲🇦 Fas'}, {code:'TNG',name:'Tanca',country:'🇲🇦 Fas'}, {code:'CAI',name:'Kahire',country:'🇪🇬 Mısır'}, {code:'HRG',name:'Hurghada',country:'🇪🇬 Mısır'}, {code:'SSH',name:'Şarm el-Şeyh',country:'🇪🇬 Mısır'}, {code:'LXR',name:'Luxor',country:'🇪🇬 Mısır'}, {code:'TUN',name:'Tunus Carthage',country:'🇹🇳 Tunus'}, {code:'CPT',name:'Cape Town',country:'🇿🇦 Güney Afrika'}, {code:'JNB',name:'Johannesburg OR Tambo',country:'🇿🇦 Güney Afrika'}, {code:'NBO',name:'Nairobi Jomo Kenyatta',country:'🇰🇪 Kenya'}, {code:'MBA',name:'Mombasa',country:'🇰🇪 Kenya'}, {code:'ADD',name:'Addis Ababa Bole',country:'🇪🇹 Etiyopya'}, {code:'SYD',name:'Sydney Kingsford Smith',country:'🇦🇺 Avustralya'}, {code:'MEL',name:'Melbourne Tullamarine',country:'🇦🇺 Avustralya'}, {code:'BNE',name:'Brisbane',country:'🇦🇺 Avustralya'}, {code:'PER',name:'Perth',country:'🇦🇺 Avustralya'}, {code:'CNS',name:'Cairns',country:'🇦🇺 Avustralya'}, {code:'AKL',name:'Auckland',country:'🇳🇿 Yeni Zelanda'}, {code:'CHC',name:'Christchurch',country:'🇳🇿 Yeni Zelanda'}, {code:'ZQN',name:'Queenstown',country:'🇳🇿 Yeni Zelanda'}, {code:'NAN',name:'Nadi (Fiji)',country:'🇫🇯 Fiji'}, ];
+
+const TR={ı:'i',ş:'s',ğ:'g',ü:'u',ö:'o',ç:'c'};
+
+function foldChar(c){
+  const l=c.toLocaleLowerCase('tr').normalize('NFD').replace(/[̀-ͯ]/g,'');
+  return TR[l]||l.charAt(0)||c;
+}
+function fold(s){return Array.from(s||'',foldChar).join('');}
+
+const COUNTRY_ALIASES={
+  'BAE':'birlesik arap emirlikleri uae united arab emirates dubai emirates',
+  'Ermenistan':'armenia','Arjantin':'argentina','Avusturya':'austria','Avustralya':'australia',
+  'Azerbaycan':'azerbaijan','Belçika':'belgium','Brezilya':'brazil','Kanada':'canada',
+  'İsviçre':'switzerland swiss','Küba':'cuba','Çek Cumh.':'cekya czechia czech republic',
+  'Almanya':'germany deutschland','Danimarka':'denmark','Mısır':'egypt','İspanya':'spain espana',
+  'Etiyopya':'ethiopia','Finlandiya':'finland','Fiji':'fiji','Fransa':'france',
+  'İngiltere':'birlesik krallik united kingdom uk england britain','Gürcistan':'georgia',
+  'Yunanistan':'greece','Hırvatistan':'croatia','Macaristan':'hungary','Endonezya':'indonesia bali',
+  'Hindistan':'india','İtalya':'italy italia','Ürdün':'jordan','Japonya':'japan','Kenya':'kenya',
+  'Kamboçya':'cambodia','Sri Lanka':'sri lanka seylan','Fas':'morocco','Maldivler':'maldives',
+  'Meksika':'mexico','Malezya':'malaysia','Hollanda':'netherlands holland','Norveç':'norway',
+  'Nepal':'nepal','Yeni Zelanda':'new zealand','Filipinler':'philippines','Polonya':'poland',
+  'Portekiz':'portugal','Katar':'qatar','İsveç':'sweden','Singapur':'singapore','Tayland':'thailand',
+  'Tunus':'tunisia','Türkiye':'turkey turkiye','ABD':'amerika usa united states america',
+  'Özbekistan':'uzbekistan','Vietnam':'vietnam','Güney Afrika':'south africa',
+};
+
+function splitCountry(c){
+  const i=c.indexOf(' ');
+  return i>0?{flag:c.slice(0,i),name:c.slice(i+1)}:{flag:'',name:c};
+}
+
+function fieldScore(field,q){
+  if(!field)return 0;
+  if(field===q)return 100;
+  if(field.startsWith(q))return 80;
+  if(field.includes(' '+q)||field.includes('-'+q)||field.includes('('+q))return 60;
+  if(q.length>=4&&field.includes(q))return 30;
+  return 0;
+}
+
+function nearPrefix(field,q){
+  if(q.length<3)return false;
+  return field.split(/[\s(-]+/).some(w=>{
+    for(const len of [q.length-1,q.length,q.length+1]){
+      if(len<1||len>w.length)continue;
+      if(editDistance(w.slice(0,len),q)<=1)return true;
+    }
+    return false;
+  });
+}
+function editDistance(a,b){
+  const d=Array.from({length:a.length+1},(_,i)=>[i]);
+  for(let j=1;j<=b.length;j++)d[0][j]=j;
+  for(let i=1;i<=a.length;i++)for(let j=1;j<=b.length;j++)
+    d[i][j]=Math.min(d[i-1][j]+1,d[i][j-1]+1,d[i-1][j-1]+(a[i-1]===b[j-1]?0:1));
+  return d[a.length][b.length];
+}
+
+function buildIndex(airports){
+  const byCountry=new Map();
+  const items=airports.map(a=>{
+    const {flag,name}=splitCountry(a.country);
+    const item={...a,flag,countryName:name,
+      fCode:fold(a.code),fName:fold(a.name),fCountry:fold(name),fAlias:fold(COUNTRY_ALIASES[name]||'')};
+    if(!byCountry.has(a.country))byCountry.set(a.country,{key:a.country,flag,name,
+      fName:item.fCountry,fAlias:item.fAlias,airports:[]});
+    byCountry.get(a.country).airports.push(item);
+    return item;
+  });
+  return {items,countries:[...byCountry.values()]};
+}
+
+function searchPlaces(index,query,{maxCountries=4,maxAirports=8}={}){
+  const q=fold(query).trim();
+  if(!q)return {countries:[],airports:index.items.slice(0,maxAirports),fuzzy:false};
+
+  let countries=index.countries
+    .map(c=>({...c,score:Math.max(fieldScore(c.fName,q),fieldScore(c.fAlias,q)*0.9)}))
+    .filter(c=>c.score>=50);
+  let airports=index.items
+    .map(a=>{
+      const code=a.fCode===q?120:(q.length<=3&&a.fCode.startsWith(q)?70:0);
+      const s=Math.max(code,fieldScore(a.fName,q),fieldScore(a.fCountry,q)*0.5,fieldScore(a.fAlias,q)*0.45);
+      return {...a,score:s};
+    })
+    .filter(a=>a.score>0);
+
+  let fuzzy=false;
+  if(!countries.length&&!airports.length){
+    fuzzy=true;
+    countries=index.countries.filter(c=>nearPrefix(c.fName,q)||nearPrefix(c.fAlias,q)).map(c=>({...c,score:1}));
+    airports=index.items.filter(a=>nearPrefix(a.fName,q)).map(a=>({...a,score:1}));
+  }
+
+  const byScore=(x,y)=>y.score-x.score||x.name.localeCompare(y.name,'tr');
+  countries.sort(byScore);
+  airports.sort(byScore);
+  return {countries:countries.slice(0,maxCountries),airports:airports.slice(0,maxAirports),fuzzy};
+}
+
+function matchRange(text,query){
+  const q=fold(query).trim();
+  if(!q)return null;
+  const t=fold(text);
+  for(let i=t.indexOf(q);i>=0;i=t.indexOf(q,i+1)){
+    if(i===0||' (-'.includes(t[i-1])||q.length>=4)return [i,i+q.length];
+  }
+  return null;
+}
+
+// Durak alanlarında yazdıkça öneri (pages/index.js ile aynı arama mantığı: lib/placeSearch.js)
+(function(){
+  const IX=buildIndex(ALL_AIRPORTS);
+  const dd=document.createElement('div');dd.className='ac';dd.id='ac-list';dd.setAttribute('role','listbox');dd.hidden=true;document.body.appendChild(dd);
+  let input=null,opts=[],active=0,country=null;
+  const esc=s=>s.replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+  const hl=(t,q)=>{const r=matchRange(t,q);return r?esc(t.slice(0,r[0]))+'<mark>'+esc(t.slice(r[0],r[1]))+'</mark>'+esc(t.slice(r[1])):esc(t);};
+  function render(){
+    const q=input.value;let fuzzy=false,html='';
+    if(country){opts=country.airports.map(a=>({a}));html+=`<div class="ac-g"><span>${country.flag} ${esc(country.name)} · ${country.airports.length} havalimanı</span><button type="button" class="ac-back">← tüm sonuçlar</button></div>`;}
+    else{const r=searchPlaces(IX,q);fuzzy=r.fuzzy;opts=[...r.countries.map(c=>({c})),...r.airports.map(a=>({a}))];
+      if(fuzzy&&opts.length)html+='<div class="ac-g">Bunu mu demek istediniz?</div>';}
+    const fa=opts.findIndex(o=>o.a);const hq=country?'':q;
+    opts.forEach((o,i)=>{
+      if(!country&&!fuzzy&&i===0&&o.c)html+='<div class="ac-g">Ülkeler</div>';
+      if(!country&&!fuzzy&&i===fa)html+=`<div class="ac-g">${q.trim()?'Şehir ve havalimanları':'Popüler'}</div>`;
+      html+=`<div class="ac-o${i===active?' on':''}" role="option" id="ac-o${i}" aria-selected="${i===active}" data-i="${i}">`+
+        (o.c?`<span>${o.c.flag} ${hl(o.c.name,q)}</span><small>${o.c.airports.length} havalimanı →</small>`
+            :`<span><code>${hl(o.a.code,hq)}</code> ${hl(o.a.name,hq)}</span><small>${o.a.flag} ${hl(o.a.countryName,hq)}</small>`)+'</div>';
+    });
+    if(!opts.length)html+=`<div class="ac-empty">“${esc(q)}” için sonuç yok. Şehir, ülke veya 3 harfli kod dene.</div>`;
+    dd.innerHTML=html;place();dd.hidden=false;input.setAttribute('aria-expanded','true');
+    input.setAttribute('aria-activedescendant',opts[active]?'ac-o'+active:'');
+    dd.querySelector('.on')?.scrollIntoView({block:'nearest'});
+  }
+  function place(){const r=input.getBoundingClientRect();dd.style.left=(r.left+scrollX)+'px';dd.style.top=(r.bottom+scrollY+4)+'px';dd.style.width=Math.max(r.width,300)+'px';}
+  function close(){dd.hidden=true;country=null;if(input)input.setAttribute('aria-expanded','false');}
+  function pick(o){
+    if(!o)return;
+    if(o.c){if(o.c.airports.length===1)return pick({a:o.c.airports[0]});country=o.c;input.value=o.c.name;active=0;render();return;}
+    input.value=`${o.a.name} (${o.a.code})`;close();
+  }
+  function open(el){input=el;country=null;active=0;el.setAttribute('role','combobox');el.setAttribute('aria-controls','ac-list');el.setAttribute('aria-autocomplete','list');el.autocomplete='off';render();}
+  const isStop=t=>t.matches&&t.matches('#stops input:not([type=date])');
+  document.addEventListener('focusin',e=>{if(isStop(e.target)){open(e.target);e.target.select();}});
+  document.addEventListener('input',e=>{if(e.target===input){country=null;active=0;render();}});
+  document.addEventListener('keydown',e=>{
+    if(e.target!==input||dd.hidden&&e.key!=='ArrowDown')return;
+    if(e.key==='ArrowDown'){e.preventDefault();if(dd.hidden)return render();active=Math.min(active+1,opts.length-1);render();}
+    else if(e.key==='ArrowUp'){e.preventDefault();active=Math.max(active-1,0);render();}
+    else if(e.key==='Enter'){e.preventDefault();pick(opts[active]);}
+    else if(e.key==='Escape'){close();}
+  });
+  dd.addEventListener('mousedown',e=>{e.preventDefault();
+    if(e.target.closest('.ac-back')){country=null;input.value='';active=0;return render();}
+    const o=e.target.closest('.ac-o');if(o)pick(opts[+o.dataset.i]);});
+  dd.addEventListener('mousemove',e=>{const o=e.target.closest('.ac-o');if(o&&+o.dataset.i!==active){active=+o.dataset.i;render();}});
+  document.addEventListener('focusout',e=>{if(e.target===input)setTimeout(()=>{if(document.activeElement!==input)close();},120);});
+  addEventListener('resize',()=>{if(!dd.hidden)place();});
+})();
+</script>
 <script>
 (function(){
   const $=s=>document.querySelector(s), $$=s=>[...document.querySelectorAll(s)];
