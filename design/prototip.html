@@ -83,6 +83,9 @@ button{cursor:pointer}
 
 /* Board */
 .board{padding-block:28px 48px}
+.board.flash .trip-head{animation:flash 1.2s ease-out}
+@keyframes flash{from{background:var(--gold-soft)}to{background:transparent}}
+.go[aria-busy="true"]{opacity:.7;cursor:progress}
 .trip-head{display:flex;flex-wrap:wrap;gap:18px;align-items:end;justify-content:space-between}
 .stats{display:flex;gap:28px;flex-wrap:wrap}
 .stat .v{font-family:var(--f-display);font-size:30px;font-weight:600}
@@ -235,7 +238,7 @@ ul.pack{padding:0;margin:0}
       <div class="toggles">
         <label class="tg"><input type="checkbox" id="flex" checked> En ucuz gidiş-dönüş tarihlerini öner (±3 gün)</label>
         <label class="tg"><input type="checkbox" id="pet" checked> Evcil hayvanla seyahat (köpek)</label>
-        <button class="go">Planı oluştur</button>
+        <button class="go" id="go-plan">Planı oluştur</button>
       </div>
     </div>
 
@@ -255,7 +258,7 @@ ul.pack{padding:0;margin:0}
           </div>
         </div>
       </div>
-      <div class="toggles"><span class="note" style="color:var(--hero-muted)">Seçtiğin öneri "Kendi rotam" ekranına aktarılır, istediğin gibi düzenlersin.</span><button class="go">Bu rotayı kullan</button></div>
+      <div class="toggles"><span class="note" style="color:var(--hero-muted)">Seçtiğin öneri "Kendi rotam" ekranına aktarılır, istediğin gibi düzenlersin.</span><button class="go" id="go-ai">Bu rotayı kullan</button></div>
     </div>
   </div>
 </header>
@@ -264,8 +267,9 @@ ul.pack{padding:0;margin:0}
   <div class="trip-head">
     <div>
       <div class="label">Seyahat planı</div>
-      <h2>İstanbul → Bangkok → Bali → İstanbul</h2>
-      <p class="note">14–27 Kasım 2026 · 2 yetişkin · 1 köpek</p>
+      <h2 id="trip-title">İstanbul → Bangkok → Bali → İstanbul</h2>
+      <p class="note" id="trip-sub">14–27 Kasım 2026 · 2 yetişkin · 1 köpek</p>
+      <p class="note" id="trip-demo" hidden>Prototip: rota başlığı senin girdine göre güncellendi, alttaki bölümler örnek veri göstermeye devam ediyor.</p>
     </div>
     <div class="stats">
       <div class="stat"><div class="label">Tahmini toplam</div><div class="v num">2.780 €</div></div>
@@ -675,6 +679,39 @@ function matchRange(text,query){
   $('#stops').addEventListener('click',e=>{ if(e.target.classList.contains('x')){ e.target.closest('.stop').remove(); relabel(); }});
   function relabel(){ $$('#stops .dot').forEach((d,i)=>d.textContent=String.fromCharCode(65+i)); }
 
+
+  // Planı oluştur: rotayı başlığa yaz, plana kaydır
+  const cityOf=v=>v.replace(/\s*\([A-Z]{3}\)\s*$/,'').replace(/ (Atatürk|Sabiha Gökçen|Suvarnabhumi|Ngurah Rai|Noi Bai|Menara)$/,'').trim();
+  $('#go-plan').addEventListener('click',e=>{
+    const b=e.currentTarget, names=$$('#stops .stop input:not([type=date])').map(i=>cityOf(i.value)).filter(Boolean);
+    if(names.length<2){b.textContent='En az 2 durak gir';setTimeout(()=>b.textContent='Planı oluştur',1600);return;}
+    b.setAttribute('aria-busy','true');b.textContent='Plan hazırlanıyor…';
+    setTimeout(()=>{
+      $('#trip-title').textContent=names.join(' → ');
+      const d=$$('#stops input[type=date]').map(i=>i.value).filter(Boolean);
+      if(d.length>1){const f=s=>new Date(s+'T12:00').toLocaleDateString('tr-TR',{day:'numeric',month:'long'});$('#trip-sub').textContent=`${f(d[0])} – ${f(d[d.length-1])} · ${$('#pax').value}${$('#pet').checked?' · evcil hayvan':''}`;}
+      $('#trip-demo').hidden=false;
+      b.removeAttribute('aria-busy');b.textContent='Planı oluştur';
+      const board=$('.board');board.classList.remove('flash');void board.offsetWidth;board.classList.add('flash');
+      board.scrollIntoView({behavior:matchMedia('(prefers-reduced-motion: reduce)').matches?'auto':'smooth'});
+    },700);
+  });
+
+  // YZ önerisini rota formuna aktar
+  const ROUTES={
+    'Bangkok + Bali':['İstanbul Atatürk (IST)','Bangkok Suvarnabhumi (BKK)','Bali Ngurah Rai (DPS)','İstanbul Atatürk (IST)'],
+    'Hanoi + Da Nang':['İstanbul Atatürk (IST)','Hanoi Noi Bai (HAN)','Da Nang (DAD)','İstanbul Atatürk (IST)'],
+    'Marakeş + Essaouira':['İstanbul Atatürk (IST)','Marakeş Menara (RAK)','Essaouira (otobüsle 3 sa)','İstanbul Atatürk (IST)']
+  };
+  $('#go-ai').addEventListener('click',()=>{
+    const pick=($('.idea[aria-pressed="true"]')||$('.idea')).querySelector('b').textContent, r=ROUTES[pick];
+    let rows=$$('#stops .stop');
+    while(rows.length<r.length){$('#addstop').click();rows=$$('#stops .stop');}
+    while(rows.length>r.length){rows[rows.length-2].remove();rows=$$('#stops .stop');}
+    rows.forEach((row,i)=>row.querySelector('input').value=r[i]);relabel();
+    mm.click();$('#p-manual').scrollIntoView({block:'nearest'});
+    $('#go-plan').focus();
+  });
   // Evcil hayvan
   $('#pet').addEventListener('change',e=>{ $$('.alert').forEach(a=>{ if(a.textContent.includes('köpek girişini')) a.hidden=!e.target.checked; }); });
 
