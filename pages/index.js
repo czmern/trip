@@ -1,4 +1,5 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useId } from 'react';
+import { buildIndex, searchPlaces, matchRange } from '../lib/placeSearch';
 import Head from 'next/head';
 
 function fmtDate(s){if(!s)return'';return new Date(s).toLocaleDateString('tr-TR',{weekday:'short',day:'numeric',month:'short'});}
@@ -171,15 +172,78 @@ const HD={required:'dot-r',recommended:'dot-y',regional:'dot-y',warning:'dot-r',
 const HS={required:'stat-req',recommended:'stat-rec',regional:'stat-rec',warning:'stat-req',ok:'stat-ok'};
 const STEPS=['✈️ Uçuşlar taranıyor...','⛈️ Hava durumu alınıyor...','🌋 Afet riski kontrol ediliyor...','💱 Döviz kurları güncelleniyor...','🛂 Vize & sağlık bilgileri hazırlanıyor...'];
 
+const PLACE_INDEX=buildIndex(ALL_AIRPORTS);
+
+function Hl({text,q}){
+  const r=matchRange(text,q);
+  if(!r)return text;
+  return <>{text.slice(0,r[0])}<mark className="dd-hl">{text.slice(r[0],r[1])}</mark>{text.slice(r[1])}</>;
+}
+
 function AirportSearch({label, value, onChange, placeholder}){
   const [q,setQ]=useState('');
   const [open,setOpen]=useState(false);
-  const filtered=q.length>=1?ALL_AIRPORTS.filter(a=>a.code.toLowerCase().includes(q.toLowerCase())||a.name.toLowerCase().includes(q.toLowerCase())||a.country.toLowerCase().includes(q.toLowerCase())).slice(0,10):ALL_AIRPORTS.slice(0,10);
+  const [active,setActive]=useState(0);
+  const [country,setCountry]=useState(null);
+  const id=useId();
+
+  let options,fuzzy=false;
+  if(country){
+    options=country.airports.map(a=>({type:'airport',a}));
+  }else{
+    const r=searchPlaces(PLACE_INDEX,q);
+    fuzzy=r.fuzzy;
+    options=[...r.countries.map(c=>({type:'country',c})),...r.airports.map(a=>({type:'airport',a}))];
+  }
+
+  function reset(next){setQ(next);setCountry(null);setActive(0);onChange(null);setOpen(true);}
+  function pick(o){
+    if(!o)return;
+    if(o.type==='country'){
+      if(o.c.airports.length===1){pick({type:'airport',a:o.c.airports[0]});return;}
+      setCountry(o.c);setQ(o.c.name);setActive(0);setOpen(true);return;
+    }
+    const a=ALL_AIRPORTS.find(x=>x.code===o.a.code);
+    onChange(a);setQ('');setCountry(null);setOpen(false);
+  }
+  function onKey(e){
+    if(e.key==='ArrowDown'){e.preventDefault();setOpen(true);setActive(i=>Math.min(i+1,options.length-1));}
+    else if(e.key==='ArrowUp'){e.preventDefault();setActive(i=>Math.max(i-1,0));}
+    else if(e.key==='Enter'&&open){e.preventDefault();pick(options[active]);}
+    else if(e.key==='Escape'){setOpen(false);}
+    else if(e.key==='Backspace'&&country){e.preventDefault();reset(q);}
+  }
+
+  const firstAirport=options.findIndex(o=>o.type==='airport');
   return(
     <div className="sf">
-      <label>{label}</label>
-      <input value={value?`${value.code} — ${value.name} ${value.country}`:q} onChange={e=>{setQ(e.target.value);onChange(null);setOpen(true);}} onFocus={()=>setOpen(true)} onBlur={()=>setTimeout(()=>setOpen(false),200)} placeholder={placeholder}/>
-      {open&&filtered.length>0&&(<div className="dd">{filtered.map(a=>(<div key={a.code} className="dd-item" onMouseDown={()=>{onChange(a);setQ('');setOpen(false);}}><span className="dd-code">{a.code}</span><span className="dd-name">{a.name}</span><div className="dd-cnt">{a.country}</div></div>))}</div>)}
+      <label htmlFor={id}>{label}</label>
+      <input id={id} role="combobox" aria-expanded={open} aria-controls={id+'-l'} aria-autocomplete="list"
+        aria-activedescendant={open&&options[active]?`${id}-o${active}`:undefined} autoComplete="off"
+        value={value?`${value.code} — ${value.name} ${value.country}`:q}
+        onChange={e=>reset(e.target.value)} onKeyDown={onKey}
+        onFocus={e=>{setOpen(true);if(value)e.target.select();}} onBlur={()=>setTimeout(()=>setOpen(false),150)} placeholder={placeholder}/>
+      {open&&(
+        <div className="dd" id={id+'-l'} role="listbox">
+          {country&&<div className="dd-g">{country.flag} {country.name} · {country.airports.length} havalimanı <span className="dd-back" onMouseDown={e=>{e.preventDefault();reset('');}}>← tüm sonuçlar</span></div>}
+          {fuzzy&&options.length>0&&<div className="dd-g">Bunu mu demek istediniz?</div>}
+          {options.map((o,i)=>(
+            <div key={o.type+(o.c?.key||o.a.code)}>
+              {!country&&!fuzzy&&i===0&&o.type==='country'&&<div className="dd-g">Ülkeler</div>}
+              {!country&&!fuzzy&&i===firstAirport&&<div className="dd-g">{q?'Şehir ve havalimanları':'Popüler'}</div>}
+              <div id={`${id}-o${i}`} role="option" aria-selected={i===active} className={`dd-item${i===active?' on':''}`}
+                onMouseEnter={()=>setActive(i)} onMouseDown={e=>{e.preventDefault();pick(o);}}>
+                {o.type==='country'?(
+                  <><span className="dd-flag">{o.c.flag}</span><span className="dd-name"><Hl text={o.c.name} q={q}/></span><span className="dd-cnt dd-r">{o.c.airports.length} havalimanı →</span></>
+                ):(
+                  <><span className="dd-code"><Hl text={o.a.code} q={country?'':q}/></span><span className="dd-name"><Hl text={o.a.name} q={country?'':q}/></span><div className="dd-cnt">{o.a.flag} <Hl text={o.a.countryName} q={country?'':q}/></div></>
+                )}
+              </div>
+            </div>
+          ))}
+          {options.length===0&&<div className="dd-empty">“{q}” için sonuç yok. Şehir, ülke veya 3 harfli havalimanı kodu deneyin.</div>}
+        </div>
+      )}
     </div>
   );
 }
@@ -263,9 +327,16 @@ export default function Home(){
       .go{background:var(--gold);color:var(--ink);border:none;padding:12px 28px;border-radius:4px;font-weight:600;font-size:14px;white-space:nowrap;transition:all .2s;margin-left:auto}
       .go:hover{background:var(--gold-l)}
       .go:disabled{opacity:.6}
-      .dd{position:absolute;top:100%;left:0;right:0;z-index:50;background:#1a2030;border:1px solid rgba(255,255,255,.15);border-radius:4px;max-height:280px;overflow-y:auto;margin-top:4px;box-shadow:0 8px 32px rgba(0,0,0,.4)}
+      .dd{position:absolute;top:100%;left:0;right:0;z-index:50;background:#1a2030;border:1px solid rgba(255,255,255,.15);border-radius:4px;max-height:340px;text-align:left;overflow-y:auto;margin-top:4px;box-shadow:0 8px 32px rgba(0,0,0,.4)}
       .dd-item{padding:10px 14px;cursor:pointer;transition:background .15s;border-bottom:1px solid rgba(255,255,255,.05)}
-      .dd-item:hover{background:rgba(201,168,76,.15)}
+      .dd-item:hover,.dd-item.on{background:rgba(201,168,76,.15)}
+      .dd-g{padding:8px 14px 4px;font-family:'Space Mono',monospace;font-size:10px;letter-spacing:1.5px;text-transform:uppercase;color:var(--teal-l);display:flex;justify-content:space-between;gap:8px}
+      .dd-back{cursor:pointer;color:var(--smoke);text-transform:none;letter-spacing:0}
+      .dd-back:hover{color:var(--gold)}
+      .dd-flag{margin-right:8px}
+      .dd-r{float:right;margin-top:1px}
+      .dd-hl{background:none;color:var(--gold);font-weight:600}
+      .dd-empty{padding:12px 14px;font-size:12px;color:var(--smoke)}
       .dd-item:last-child{border:none}
       .dd-code{font-family:'Space Mono',monospace;font-size:12px;color:var(--gold);margin-right:8px}
       .dd-name{font-size:13px;color:#fff}
